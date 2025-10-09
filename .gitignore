@@ -1,0 +1,23 @@
+# ISO Document files
+ISO_DIS_17978-3(en).pdf
+ISO_DIS_17978-3(en).md
+
+# Python virtual environment
+venv/
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db

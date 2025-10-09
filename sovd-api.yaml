@@ -1,0 +1,1861 @@
+openapi: 3.0.3
+info:
+  title: SOVD (Service-Oriented Vehicle Diagnostics) API
+  description: |
+    This API specification defines the Service-Oriented Vehicle Diagnostics (SOVD) interface 
+    according to ISO/DIS 17978-3:2025. The SOVD API provides access to vehicle diagnostics, 
+    fault handling, data resources, operations, target modes, and configuration management.
+  version: "1.0.0"
+  contact:
+    name: SOVD API Support
+  license:
+    name: ISO/DIS 17978-3:2025
+
+servers:
+  - url: https://{sovd-server-host}/{exve-manufacturer-specific}
+    description: SOVD Server
+    variables:
+      sovd-server-host:
+        description: Host name of the SOVD Server
+        default: localhost
+      exve-manufacturer-specific:
+        description: Optional path element to avoid clashes in URIs
+        default: ""
+
+paths:
+  # Version Info
+  /version-info:
+    get:
+      summary: Read all supported versions of the SOVD server
+      description: Provides information about all supported versions of the SOVD standard
+      operationId: getVersionInfo
+      responses:
+        '200':
+          description: The request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionInfo'
+
+  # Entity Discovery
+  /{entity-collection}:
+    get:
+      summary: Query for Entities from an SOVD server
+      description: Provides the list of contained Entities for each requested Entity collection
+      operationId: getEntities
+      parameters:
+        - $ref: '#/components/parameters/EntityCollection'
+        - $ref: '#/components/parameters/Tags'
+      responses:
+        '200':
+          description: The request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntityCollection'
+
+  /{entity-path}:
+    get:
+      summary: Query for capabilities of an Entity
+      description: Returns the capabilities of an Entity
+      operationId: getEntityCapabilities
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/IncludeSchema'
+      responses:
+        '200':
+          description: The request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntityCapabilities'
+
+  # Faults
+  /{entity-path}/faults:
+    get:
+      summary: Query for faults from an Entity
+      description: Provides the list of fault entries for an Entity
+      operationId: getFaults
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/Severity'
+        - $ref: '#/components/parameters/Scope'
+        - $ref: '#/components/parameters/Status'
+        - $ref: '#/components/parameters/IncludeSchema'
+      responses:
+        '200':
+          description: The request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FaultCollection'
+    delete:
+      summary: Delete all faults of an Entity
+      description: Deletes all fault entries for an Entity
+      operationId: deleteAllFaults
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+      responses:
+        '204':
+          description: All faults deleted successfully
+
+  /{entity-path}/faults/{fault-code}:
+    get:
+      summary: Read a fault resource
+      description: Provides detailed information about a specific fault
+      operationId: getFault
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/FaultCode'
+        - $ref: '#/components/parameters/IncludeSchema'
+      responses:
+        '200':
+          description: The request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Fault'
+    delete:
+      summary: Delete single fault of an Entity
+      description: Deletes a specific fault entry
+      operationId: deleteFault
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/FaultCode'
+      responses:
+        '204':
+          description: Fault deleted successfully
+
+  # Data Resources
+  /{entity-path}/data:
+    get:
+      summary: Query for data from an Entity
+      description: Provides the list of data resources for an Entity
+      operationId: getDataResources
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/Category'
+        - $ref: '#/components/parameters/Groups'
+        - $ref: '#/components/parameters/Tags'
+        - $ref: '#/components/parameters/IncludeSchema'
+      responses:
+        '200':
+          description: The request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataResourceCollection'
+
+  /{entity-path}/data/{data-id}:
+    get:
+      summary: Read a data resource
+      description: Provides the current value of a specific data resource
+      operationId: getDataResource
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/DataId'
+        - $ref: '#/components/parameters/IncludeSchema'
+      responses:
+        '200':
+          description: The request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataResource'
+    put:
+      summary: Write a data resource
+      description: Updates the value of a specific data resource
+      operationId: updateDataResource
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/DataId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataResourceWrite'
+      responses:
+        '200':
+          description: Data resource updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataResource'
+
+  # Data Lists
+  /{entity-path}/data-lists:
+    get:
+      summary: Query for data-lists from an Entity
+      description: Provides the list of all data-list resources available for an Entity
+      operationId: getDataLists
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+      responses:
+        '200':
+          description: The request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataListCollection'
+    post:
+      summary: Creating a data-list for reading multiple data values at once from an Entity
+      description: Creates a new data-list resource for reading multiple data values
+      operationId: createDataList
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataListCreate'
+      responses:
+        '201':
+          description: Data-list created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataList'
+          headers:
+            Location:
+              description: URI of the created data-list
+              schema:
+                type: string
+
+  /{entity-path}/data-lists/{data-list-id}:
+    get:
+      summary: Read a data-list resource
+      description: Provides the current values of all data resources in the data-list
+      operationId: getDataList
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/DataListId'
+      responses:
+        '200':
+          description: The request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataList'
+    delete:
+      summary: Delete an existing data-list
+      description: Deletes an existing data-list resource
+      operationId: deleteDataList
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/DataListId'
+      responses:
+        '204':
+          description: Data-list deleted successfully
+
+  # Operations
+  /{entity-path}/operations:
+    get:
+      summary: Query for operations from an Entity
+      description: Provides the list of operations available for an Entity
+      operationId: getOperations
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/IncludeSchema'
+      responses:
+        '200':
+          description: The request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationCollection'
+
+  /{entity-path}/operations/{operation-id}:
+    get:
+      summary: Retrieve details of an operation
+      description: Provides detailed information about a specific operation
+      operationId: getOperation
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/OperationId'
+        - $ref: '#/components/parameters/IncludeSchema'
+      responses:
+        '200':
+          description: The request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Operation'
+
+  /{entity-path}/operations/{operation-id}/executions:
+    get:
+      summary: Query for executions of an operation
+      description: Provides the list of executions for a specific operation
+      operationId: getOperationExecutions
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/OperationId'
+      responses:
+        '200':
+          description: The request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecutionCollection'
+    post:
+      summary: Start execution of an operation
+      description: Starts execution of a specific operation
+      operationId: startOperationExecution
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/OperationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperationExecutionRequest'
+      responses:
+        '202':
+          description: Operation execution started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationExecution'
+          headers:
+            Location:
+              description: URI of the operation execution
+              schema:
+                type: string
+
+  /{entity-path}/operations/{operation-id}/executions/{execution-id}:
+    get:
+      summary: Read the status of an operation execution
+      description: Provides the current status of a specific operation execution
+      operationId: getOperationExecutionStatus
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/OperationId'
+        - $ref: '#/components/parameters/ExecutionId'
+      responses:
+        '200':
+          description: The request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationExecution'
+    delete:
+      summary: Terminate the execution of an operation
+      description: Terminates a running operation execution
+      operationId: terminateOperationExecution
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/OperationId'
+        - $ref: '#/components/parameters/ExecutionId'
+      responses:
+        '204':
+          description: Operation execution terminated successfully
+    put:
+      summary: Support for execute / freeze / reset and custom capabilities
+      description: Modifies the execution of an operation (freeze, reset, etc.)
+      operationId: modifyOperationExecution
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/OperationId'
+        - $ref: '#/components/parameters/ExecutionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperationExecutionModify'
+      responses:
+        '202':
+          description: Operation execution modified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationExecution'
+          headers:
+            Location:
+              description: URI of the operation execution
+              schema:
+                type: string
+
+  # Target Modes
+  /{entity-path}/modes:
+    get:
+      summary: Query for modes of an Entity
+      description: Provides the list of modes available for an Entity
+      operationId: getModes
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/IncludeSchema'
+      responses:
+        '200':
+          description: The request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModeCollection'
+
+  /{entity-path}/modes/{mode-id}:
+    get:
+      summary: Retrieve details of a mode
+      description: Provides detailed information about a specific mode
+      operationId: getMode
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/ModeId'
+        - $ref: '#/components/parameters/IncludeSchema'
+      responses:
+        '200':
+          description: The request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mode'
+    put:
+      summary: Set mode of an Entity
+      description: Sets the mode of an Entity to a specific value
+      operationId: setMode
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/ModeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModeSet'
+      responses:
+        '200':
+          description: Mode set successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mode'
+
+  # Configuration
+  /{entity-path}/configurations:
+    get:
+      summary: Query for configurations from an Entity
+      description: Provides the list of configuration resources for an Entity
+      operationId: getConfigurations
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/IncludeSchema'
+      responses:
+        '200':
+          description: The request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigurationCollection'
+
+  /{entity-path}/configurations/{configuration-id}:
+    get:
+      summary: Read a configuration resource
+      description: Provides the current value of a specific configuration resource
+      operationId: getConfiguration
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/ConfigurationId'
+        - $ref: '#/components/parameters/IncludeSchema'
+      responses:
+        '200':
+          description: The request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Configuration'
+    put:
+      summary: Write a configuration resource
+      description: Updates the value of a specific configuration resource
+      operationId: updateConfiguration
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/ConfigurationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigurationWrite'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ConfigurationWriteMultipart'
+      responses:
+        '200':
+          description: Configuration updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Configuration'
+    delete:
+      summary: Reset configuration to default value
+      description: Resets a specific configuration resource to its default value
+      operationId: resetConfiguration
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/ConfigurationId'
+      responses:
+        '204':
+          description: Configuration reset successfully
+
+  /{entity-path}/configurations:
+    delete:
+      summary: Reset all configurations to default value
+      description: Resets all configuration resources to their default values
+      operationId: resetAllConfigurations
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+      responses:
+        '204':
+          description: All configurations reset successfully
+
+  # Cyclic Subscriptions
+  /{entity-path}/cyclic-subscriptions:
+    get:
+      summary: Query for cyclic-subscriptions from an Entity
+      description: Provides the list of cyclic subscriptions for an Entity
+      operationId: getCyclicSubscriptions
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+      responses:
+        '200':
+          description: The request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CyclicSubscriptionCollection'
+    post:
+      summary: Issue a new cyclic-subscription
+      description: Creates a new cyclic subscription for data monitoring
+      operationId: createCyclicSubscription
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CyclicSubscriptionCreate'
+      responses:
+        '201':
+          description: Cyclic subscription created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CyclicSubscription'
+          headers:
+            Location:
+              description: URI of the created cyclic subscription
+              schema:
+                type: string
+
+  /{entity-path}/cyclic-subscriptions/{subscription-id}:
+    get:
+      summary: Retrieve details of a cyclic-subscription
+      description: Provides detailed information about a specific cyclic subscription
+      operationId: getCyclicSubscription
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/SubscriptionId'
+      responses:
+        '200':
+          description: The request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CyclicSubscription'
+    put:
+      summary: Update a cyclic-subscription
+      description: Updates an existing cyclic subscription
+      operationId: updateCyclicSubscription
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/SubscriptionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CyclicSubscriptionUpdate'
+      responses:
+        '200':
+          description: Cyclic subscription updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CyclicSubscription'
+    delete:
+      summary: Delete a cyclic-subscription
+      description: Deletes an existing cyclic subscription
+      operationId: deleteCyclicSubscription
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/SubscriptionId'
+      responses:
+        '204':
+          description: Cyclic subscription deleted successfully
+
+  /{entity-path}/cyclic-subscriptions/{subscription-id}/events:
+    get:
+      summary: Retrieve cyclic subscription events
+      description: Establishes a Server-Sent Event stream for cyclic data reception
+      operationId: getCyclicSubscriptionEvents
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/SubscriptionId'
+      responses:
+        '200':
+          description: Event stream established
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: Server-Sent Events stream
+
+  # Triggers
+  /{entity-path}/triggers:
+    get:
+      summary: Query for triggers from an Entity
+      description: Provides the list of triggers for an Entity
+      operationId: getTriggers
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+      responses:
+        '200':
+          description: The request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriggerCollection'
+    post:
+      summary: Issue a new trigger
+      description: Creates a new trigger for event-based data reception
+      operationId: createTrigger
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TriggerCreate'
+      responses:
+        '201':
+          description: Trigger created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trigger'
+          headers:
+            Location:
+              description: URI of the created trigger
+              schema:
+                type: string
+
+  /{entity-path}/triggers/{trigger-id}:
+    get:
+      summary: Retrieve details of a trigger
+      description: Provides detailed information about a specific trigger
+      operationId: getTrigger
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/TriggerId'
+      responses:
+        '200':
+          description: The request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trigger'
+    put:
+      summary: Update a trigger
+      description: Updates an existing trigger
+      operationId: updateTrigger
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/TriggerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TriggerUpdate'
+      responses:
+        '200':
+          description: Trigger updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trigger'
+    delete:
+      summary: Delete a trigger
+      description: Deletes an existing trigger
+      operationId: deleteTrigger
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/TriggerId'
+      responses:
+        '204':
+          description: Trigger deleted successfully
+
+  /{entity-path}/triggers/{trigger-id}/events:
+    get:
+      summary: Retrieve trigger events
+      description: Establishes a Server-Sent Event stream for trigger-based data reception
+      operationId: getTriggerEvents
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/TriggerId'
+      responses:
+        '200':
+          description: Event stream established
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: Server-Sent Events stream
+
+  # Scripts
+  /{entity-path}/scripts:
+    get:
+      summary: Query for scripts from an Entity
+      description: Provides the list of scripts available for an Entity
+      operationId: getScripts
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+      responses:
+        '200':
+          description: The request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScriptCollection'
+    post:
+      summary: Upload a script
+      description: Uploads a new script to an Entity
+      operationId: uploadScript
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ScriptUpload'
+      responses:
+        '201':
+          description: Script uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Script'
+          headers:
+            Location:
+              description: URI of the uploaded script
+              schema:
+                type: string
+
+  /{entity-path}/scripts/{script-id}:
+    get:
+      summary: Retrieve details of a script
+      description: Provides detailed information about a specific script
+      operationId: getScript
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/ScriptId'
+      responses:
+        '200':
+          description: The request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Script'
+    delete:
+      summary: Remove a script
+      description: Removes a script from an Entity
+      operationId: removeScript
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/ScriptId'
+      responses:
+        '204':
+          description: Script removed successfully
+
+  /{entity-path}/scripts/{script-id}/executions:
+    get:
+      summary: Query for executions of a Script
+      description: Provides the list of executions for a specific script
+      operationId: getScriptExecutions
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/ScriptId'
+      responses:
+        '200':
+          description: The request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScriptExecutionCollection'
+    post:
+      summary: Start execution of a script
+      description: Starts execution of a specific script
+      operationId: startScriptExecution
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/ScriptId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScriptExecutionRequest'
+      responses:
+        '202':
+          description: Script execution started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScriptExecution'
+          headers:
+            Location:
+              description: URI of the script execution
+              schema:
+                type: string
+
+  /{entity-path}/scripts/{script-id}/executions/{execution-id}:
+    get:
+      summary: Read the status of a script execution
+      description: Provides the current status of a specific script execution
+      operationId: getScriptExecutionStatus
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/ScriptId'
+        - $ref: '#/components/parameters/ExecutionId'
+      responses:
+        '200':
+          description: The request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScriptExecution'
+    delete:
+      summary: Terminate the script execution
+      description: Terminates a running script execution
+      operationId: terminateScriptExecution
+      parameters:
+        - $ref: '#/components/parameters/EntityPath'
+        - $ref: '#/components/parameters/ScriptId'
+        - $ref: '#/components/parameters/ExecutionId'
+      responses:
+        '204':
+          description: Script execution terminated successfully
+
+components:
+  parameters:
+    EntityCollection:
+      name: entity-collection
+      in: path
+      required: true
+      description: Entity collection type (areas, components, apps)
+      schema:
+        type: string
+        enum: [areas, components, apps]
+
+    EntityPath:
+      name: entity-path
+      in: path
+      required: true
+      description: Path to the Entity
+      schema:
+        type: string
+        pattern: '^(areas|components|apps)/[^/]+'
+
+    FaultCode:
+      name: fault-code
+      in: path
+      required: true
+      description: Fault code identifier
+      schema:
+        type: string
+
+    DataId:
+      name: data-id
+      in: path
+      required: true
+      description: Data resource identifier
+      schema:
+        type: string
+
+    DataListId:
+      name: data-list-id
+      in: path
+      required: true
+      description: Data-list identifier
+      schema:
+        type: string
+
+    OperationId:
+      name: operation-id
+      in: path
+      required: true
+      description: Operation identifier
+      schema:
+        type: string
+
+    ExecutionId:
+      name: execution-id
+      in: path
+      required: true
+      description: Operation execution identifier
+      schema:
+        type: string
+
+    ModeId:
+      name: mode-id
+      in: path
+      required: true
+      description: Mode identifier
+      schema:
+        type: string
+
+    ConfigurationId:
+      name: configuration-id
+      in: path
+      required: true
+      description: Configuration resource identifier
+      schema:
+        type: string
+
+    SubscriptionId:
+      name: subscription-id
+      in: path
+      required: true
+      description: Cyclic subscription identifier
+      schema:
+        type: string
+
+    TriggerId:
+      name: trigger-id
+      in: path
+      required: true
+      description: Trigger identifier
+      schema:
+        type: string
+
+    ScriptId:
+      name: script-id
+      in: path
+      required: true
+      description: Script identifier
+      schema:
+        type: string
+
+    Tags:
+      name: tags
+      in: query
+      required: false
+      description: Filter by tags
+      schema:
+        type: array
+        items:
+          type: string
+
+    Severity:
+      name: severity
+      in: query
+      required: false
+      description: Filter faults by severity level
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 3
+
+    Scope:
+      name: scope
+      in: query
+      required: false
+      description: Filter faults by scope
+      schema:
+        type: string
+
+    Status:
+      name: status
+      in: query
+      required: false
+      description: Filter faults by status
+      schema:
+        type: string
+
+    Category:
+      name: category
+      in: query
+      required: false
+      description: Filter data resources by category
+      schema:
+        type: string
+        enum: [currentData, historicalData, staticData]
+
+    Groups:
+      name: groups
+      in: query
+      required: false
+      description: Filter data resources by groups
+      schema:
+        type: array
+        items:
+          type: string
+
+    IncludeSchema:
+      name: include-schema
+      in: query
+      required: false
+      description: Include JSON schema in response
+      schema:
+        type: boolean
+        default: false
+
+  schemas:
+    VersionInfo:
+      type: object
+      required: [versions]
+      properties:
+        versions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Version'
+
+    Version:
+      type: object
+      required: [version, status]
+      properties:
+        version:
+          type: string
+          description: Version identifier
+        status:
+          type: string
+          enum: [stable, draft, deprecated]
+          description: Version status
+        accessurl:
+          type: string
+          format: uri
+          description: Access URL for this version
+
+    EntityCollection:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntityReference'
+
+    EntityReference:
+      type: object
+      required: [id, name, href]
+      properties:
+        id:
+          type: string
+          description: Entity identifier
+        name:
+          type: string
+          description: Entity name
+        href:
+          type: string
+          format: uri
+          description: Entity URI
+        tags:
+          type: array
+          items:
+            type: string
+          description: Entity tags
+
+    EntityCapabilities:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Entity identifier
+        name:
+          type: string
+          description: Entity name
+        tags:
+          type: array
+          items:
+            type: string
+        data:
+          type: string
+          format: uri
+          description: Data resources URI
+        faults:
+          type: string
+          format: uri
+          description: Faults URI
+        operations:
+          type: string
+          format: uri
+          description: Operations URI
+        configurations:
+          type: string
+          format: uri
+          description: Configurations URI
+        modes:
+          type: string
+          format: uri
+          description: Modes URI
+
+    FaultCollection:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FaultReference'
+
+    FaultReference:
+      type: object
+      required: [code, scope, fault_name, severity, status]
+      properties:
+        code:
+          type: string
+          description: Fault code
+        scope:
+          type: string
+          description: Fault scope
+        display_code:
+          type: string
+          description: Display code
+        fault_name:
+          type: string
+          description: Fault name
+        fault_translation_id:
+          type: string
+          description: Translation ID
+        severity:
+          type: integer
+          minimum: 1
+          maximum: 3
+          description: Severity level
+        status:
+          $ref: '#/components/schemas/FaultStatus'
+
+    Fault:
+      type: object
+      required: [item, environment_data]
+      properties:
+        item:
+          $ref: '#/components/schemas/FaultReference'
+        environment_data:
+          $ref: '#/components/schemas/EnvironmentData'
+
+    FaultStatus:
+      type: object
+      required: [aggregatedStatus]
+      properties:
+        testFailed:
+          type: string
+          enum: ["0", "1"]
+        testFailedThisOperationCycle:
+          type: string
+          enum: ["0", "1"]
+        pendingDTC:
+          type: string
+          enum: ["0", "1"]
+        confirmedDTC:
+          type: string
+          enum: ["0", "1"]
+        testNotCompletedSinceLastClear:
+          type: string
+          enum: ["0", "1"]
+        testFailedSinceLastClear:
+          type: string
+          enum: ["0", "1"]
+        testNotCompletedThisOperationCycle:
+          type: string
+          enum: ["0", "1"]
+        warningIndicatorRequested:
+          type: string
+          enum: ["0", "1"]
+        mask:
+          type: string
+        aggregatedStatus:
+          type: string
+          enum: [active, inactive, pending]
+
+    EnvironmentData:
+      type: object
+      properties:
+        extended_data_records:
+          $ref: '#/components/schemas/ExtendedDataRecords'
+        snapshots:
+          type: array
+          items:
+            $ref: '#/components/schemas/Snapshot'
+
+    ExtendedDataRecords:
+      type: object
+      properties:
+        first_occurence:
+          type: string
+          format: date-time
+        last_occurence:
+          type: string
+          format: date-time
+
+    Snapshot:
+      type: object
+      required: [name, data]
+      properties:
+        name:
+          type: string
+        data:
+          oneOf:
+            - type: number
+            - type: string
+            - type: boolean
+
+    DataResourceCollection:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DataResourceReference'
+
+    DataResourceReference:
+      type: object
+      required: [id, name, category]
+      properties:
+        id:
+          type: string
+          description: Data resource identifier
+        name:
+          type: string
+          description: Data resource name
+        category:
+          type: string
+          enum: [currentData, historicalData, staticData]
+        groups:
+          type: array
+          items:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+
+    DataResource:
+      type: object
+      required: [id, data]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        data:
+          type: object
+          description: Data value
+        schema:
+          type: object
+          description: JSON schema for the data
+        tags:
+          type: array
+          items:
+            type: string
+
+    DataResourceWrite:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          description: Data value to write
+
+    DataListCollection:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DataListReference'
+
+    DataListReference:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+          description: Data-list identifier
+
+    DataList:
+      type: object
+      required: [id, items]
+      properties:
+        id:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DataResource'
+
+    DataListCreate:
+      type: object
+      required: [ids]
+      properties:
+        ids:
+          type: array
+          items:
+            type: string
+          description: List of data resource IDs to include
+
+    OperationCollection:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OperationReference'
+
+    OperationReference:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          description: Operation identifier
+        name:
+          type: string
+          description: Operation name
+
+    Operation:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        parameters:
+          type: object
+          description: Operation parameters schema
+        capabilities:
+          type: array
+          items:
+            type: string
+          description: Supported capabilities
+
+    ExecutionCollection:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExecutionReference'
+
+    ExecutionReference:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+          description: Execution identifier
+
+    OperationExecution:
+      type: object
+      required: [id, status]
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum: [running, completed, failed, terminated]
+        parameters:
+          type: object
+          description: Execution parameters
+        result:
+          type: object
+          description: Execution result
+        error:
+          type: object
+          description: Error information
+
+    OperationExecutionRequest:
+      type: object
+      properties:
+        timeout:
+          type: integer
+          description: Execution timeout in seconds
+        parameters:
+          type: object
+          description: Operation parameters
+
+    OperationExecutionModify:
+      type: object
+      required: [capability]
+      properties:
+        capability:
+          type: string
+          enum: [freeze, reset, execute]
+        timeout:
+          type: integer
+          description: New timeout value
+
+    ModeCollection:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModeReference'
+
+    ModeReference:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          description: Mode identifier
+        name:
+          type: string
+          description: Mode name
+
+    Mode:
+      type: object
+      required: [id, name, value]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        value:
+          type: string
+        description:
+          type: string
+        schema:
+          type: object
+          description: JSON schema for mode values
+
+    ModeSet:
+      type: object
+      required: [value]
+      properties:
+        value:
+          type: string
+          description: Mode value to set
+        mode_expiration:
+          type: integer
+          description: Mode expiration time in seconds
+
+    ConfigurationCollection:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConfigurationReference'
+
+    ConfigurationReference:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          description: Configuration identifier
+        name:
+          type: string
+          description: Configuration name
+
+    Configuration:
+      type: object
+      required: [id, data]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        data:
+          type: object
+          description: Configuration data
+        schema:
+          type: object
+          description: JSON schema for configuration data
+
+    ConfigurationWrite:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          description: Configuration data to write
+        signature:
+          type: string
+          description: Data signature for verification
+
+    ConfigurationWriteMultipart:
+      type: object
+      properties:
+        data:
+          type: string
+          format: binary
+          description: Configuration data file
+        signature:
+          type: string
+          description: Data signature for verification
+
+    # Cyclic Subscriptions
+    CyclicSubscriptionCollection:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CyclicSubscriptionReference'
+
+    CyclicSubscriptionReference:
+      type: object
+      required: [id, resource, subscription, protocol]
+      properties:
+        id:
+          type: string
+          description: Subscription identifier
+        resource:
+          type: string
+          format: uri
+          description: Monitored resource URI
+        subscription:
+          type: string
+          format: uri
+          description: Subscription URI
+        protocol:
+          type: string
+          enum: [sse]
+          description: Event protocol
+
+    CyclicSubscription:
+      type: object
+      required: [id, observed_resource, event_source, protocol]
+      properties:
+        id:
+          type: string
+        observed_resource:
+          type: string
+          format: uri
+        event_source:
+          type: string
+          format: uri
+        protocol:
+          type: string
+          enum: [sse]
+        interval:
+          type: string
+          enum: [slow, medium, fast]
+        expires:
+          type: string
+          format: date-time
+
+    CyclicSubscriptionCreate:
+      type: object
+      required: [resource, protocol]
+      properties:
+        resource:
+          type: string
+          format: uri
+          description: Resource to monitor
+        protocol:
+          type: string
+          enum: [sse]
+        interval:
+          type: string
+          enum: [slow, medium, fast]
+          default: medium
+        duration:
+          type: integer
+          description: Subscription duration in seconds
+
+    CyclicSubscriptionUpdate:
+      type: object
+      properties:
+        interval:
+          type: string
+          enum: [slow, medium, fast]
+        duration:
+          type: integer
+          description: Subscription duration in seconds
+
+    # Triggers
+    TriggerCollection:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TriggerReference'
+
+    TriggerReference:
+      type: object
+      required: [id, resource, trigger, protocol]
+      properties:
+        id:
+          type: string
+          description: Trigger identifier
+        resource:
+          type: string
+          format: uri
+          description: Monitored resource URI
+        trigger:
+          type: string
+          format: uri
+          description: Trigger URI
+        protocol:
+          type: string
+          enum: [sse]
+          description: Event protocol
+
+    Trigger:
+      type: object
+      required: [id, observed_resource, event_source, protocol, condition]
+      properties:
+        id:
+          type: string
+        observed_resource:
+          type: string
+          format: uri
+        event_source:
+          type: string
+          format: uri
+        protocol:
+          type: string
+          enum: [sse]
+        condition:
+          $ref: '#/components/schemas/TriggerCondition'
+        lifetime:
+          type: integer
+          description: Trigger lifetime in seconds
+
+    TriggerCondition:
+      type: object
+      required: [source, match, values]
+      properties:
+        source:
+          type: string
+          format: uri-reference
+          description: Source to monitor
+        match:
+          type: string
+          enum: [equals, not_equals, greater_than, less_than, contains]
+          default: equals
+        values:
+          type: array
+          items:
+            oneOf:
+              - type: string
+              - type: number
+              - type: boolean
+
+    TriggerCreate:
+      type: object
+      required: [resource, protocol, condition]
+      properties:
+        resource:
+          type: string
+          format: uri
+          description: Resource to monitor
+        protocol:
+          type: string
+          enum: [sse]
+        condition:
+          $ref: '#/components/schemas/TriggerCondition'
+        lifetime:
+          type: integer
+          description: Trigger lifetime in seconds
+
+    TriggerUpdate:
+      type: object
+      properties:
+        condition:
+          $ref: '#/components/schemas/TriggerCondition'
+        lifetime:
+          type: integer
+          description: Trigger lifetime in seconds
+
+    # Scripts
+    ScriptCollection:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScriptReference'
+
+    ScriptReference:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          description: Script identifier
+        name:
+          type: string
+          description: Script name
+
+    Script:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        version:
+          type: string
+        language:
+          type: string
+        size:
+          type: integer
+          description: Script size in bytes
+
+    ScriptUpload:
+      type: object
+      required: [script]
+      properties:
+        script:
+          type: string
+          format: binary
+          description: Script file
+        name:
+          type: string
+          description: Script name
+        description:
+          type: string
+          description: Script description
+
+    ScriptExecutionCollection:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScriptExecutionReference'
+
+    ScriptExecutionReference:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+          description: Execution identifier
+
+    ScriptExecution:
+      type: object
+      required: [id, status]
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum: [running, completed, failed, terminated]
+        parameters:
+          type: object
+          description: Execution parameters
+        result:
+          type: object
+          description: Execution result
+        error:
+          type: object
+          description: Error information
+
+    ScriptExecutionRequest:
+      type: object
+      properties:
+        timeout:
+          type: integer
+          description: Execution timeout in seconds
+        parameters:
+          type: object
+          description: Script parameters
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              description: Error code
+            message:
+              type: string
+              description: Error message
+            details:
+              type: object
+              description: Additional error details
+
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for authentication
+
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: API key for authentication
+
+security:
+  - BearerAuth: []
+  - ApiKeyAuth: []
