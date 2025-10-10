@@ -6,10 +6,10 @@ Debug enhanced server routes
 import os
 import sys
 
-# Add the current directory to Python path
-sys.path.insert(0, os.path.dirname(__file__))
+# Add the src directory to the path
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from enhanced_server import app
+from sovd_server.enhanced_server import app
 
 if __name__ == '__main__':
     print("Enhanced server routes:")

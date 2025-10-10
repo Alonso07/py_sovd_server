@@ -4,12 +4,18 @@ Simple test server without authentication for testing the SOVD API endpoints
 """
 
 import connexion
+import sys
+import os
+
+# Add the generated directory to the path
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'generated'))
+
 from sovd_server import encoder
 from sovd_server.controllers import default_controller
 
 def create_app():
     """Create the Flask app without authentication"""
-    app = connexion.App(__name__, specification_dir='./sovd_server/openapi/')
+    app = connexion.App(__name__, specification_dir=os.path.join(os.path.dirname(__file__), '..', 'generated', 'sovd_server', 'openapi'))
     app.app.json_encoder = encoder.JSONEncoder
     
     # Add API without security requirements

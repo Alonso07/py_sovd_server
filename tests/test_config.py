@@ -7,7 +7,11 @@ Tests the YAML configuration loading and data retrieval
 import sys
 import os
 import json
-from config_loader import config_loader
+
+# Add the src directory to the path
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+from sovd_server.config_loader import config_loader
 
 def test_configuration():
     """Test the configuration loading and data retrieval"""

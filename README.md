@@ -15,23 +15,32 @@ This project implements a Service-Oriented Vehicle Diagnostics (SOVD) server bas
 
 ```
 sovd_server/
-├── config/
-│   ├── sovd_gateway.yaml          # Main gateway configuration
-│   ├── entities/                   # Entity configurations
-│   │   ├── areas.yaml
-│   │   ├── components.yaml
-│   │   └── apps.yaml
-│   └── resources/                  # Resource configurations
-│       ├── data/                   # Data resource configs
-│       ├── operations/             # Operation configs
-│       ├── faults/                 # Fault configs
-│       └── modes/                  # Mode configs
-├── generated_server/               # Auto-generated SOVD server
-├── enhanced_server.py             # Enhanced server with YAML support
-├── config_loader.py               # YAML configuration loader
-├── test_config.py                 # Configuration testing
-├── test_endpoints.py              # Endpoint testing
-└── requirements_enhanced.txt      # Additional dependencies
+├── src/
+│   └── sovd_server/               # Main source code
+│       ├── config/                # Configuration files
+│       │   ├── sovd_gateway.yaml  # Main gateway configuration
+│       │   ├── entities/          # Entity configurations
+│       │   │   ├── areas.yaml
+│       │   │   ├── components.yaml
+│       │   │   └── apps.yaml
+│       │   └── resources/         # Resource configurations
+│       │       ├── data/          # Data resource configs
+│       │       ├── operations/    # Operation configs
+│       │       ├── faults/        # Fault configs
+│       │       └── modes/         # Mode configs
+│       ├── enhanced_server.py     # Enhanced server with YAML support
+│       ├── config_loader.py       # YAML configuration loader
+│       └── run_enhanced_server.py # Server runner script
+├── tests/                         # Test files
+│   ├── test_config.py             # Configuration testing
+│   ├── test_endpoints.py          # Endpoint testing
+│   └── debug_*.py                 # Debug utilities
+├── generated/                     # Auto-generated SOVD server
+├── docs/                          # Documentation
+├── requirements.txt               # Dependencies
+├── setup.py                       # Package setup
+├── pyproject.toml                 # Modern Python project config
+└── Makefile                       # Development commands
 ```
 
 ## Configuration System
@@ -63,24 +72,42 @@ sovd_server/
 
 2. **Install dependencies**:
    ```bash
-   pip install -r requirements_enhanced.txt
+   pip install -r requirements.txt
    ```
 
-3. **Test configuration**:
+3. **Install in development mode**:
    ```bash
-   python test_config.py
+   pip install -e .
+   ```
+
+4. **Test configuration**:
+   ```bash
+   python tests/test_config.py
    ```
 
 ## Running the Server
 
 ### Enhanced Server (Recommended)
 ```bash
-python enhanced_server.py
+make run-server
+# or
+python src/sovd_server/run_enhanced_server.py
 ```
 
 ### Simple Server (Basic)
 ```bash
-python generated_server/simple_server.py
+python generated/simple_server.py
+```
+
+## Development Commands
+
+```bash
+make help          # Show all available commands
+make install-dev   # Install development dependencies
+make test          # Run all tests
+make lint          # Run linting checks
+make format        # Format code with black
+make clean         # Clean up build artifacts
 ```
 
 ## API Endpoints
@@ -156,22 +183,27 @@ operations:
 
 ## Testing
 
+### Run All Tests
+```bash
+make test
+```
+
 ### Configuration Test
 ```bash
-python test_config.py
+python tests/test_config.py
 ```
 
 ### Endpoint Test
 ```bash
-python test_endpoints.py
+python tests/test_endpoints.py
 ```
 
 ## Development
 
 The system is designed to be easily extensible:
 
-1. **Add new entities**: Create new YAML files in `config/entities/`
-2. **Add new resources**: Create new YAML files in `config/resources/`
+1. **Add new entities**: Create new YAML files in `src/sovd_server/config/entities/`
+2. **Add new resources**: Create new YAML files in `src/sovd_server/config/resources/`
 3. **Modify data**: Update the YAML files with new data
 4. **Add endpoints**: Extend the enhanced server with new routes
 

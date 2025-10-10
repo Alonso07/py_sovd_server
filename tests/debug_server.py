@@ -6,7 +6,11 @@ Debug server to test entity lookup
 import os
 import sys
 from flask import Flask, jsonify
-from config_loader import config_loader
+
+# Add the src directory to the path
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+from sovd_server.config_loader import config_loader
 
 app = Flask(__name__)
 

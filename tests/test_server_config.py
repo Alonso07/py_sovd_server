@@ -1,25 +1,28 @@
 #!/usr/bin/env python3
 """
-Debug entity lookup in the server context
+Test server configuration loading
 """
 
 import sys
 import os
-from config_loader import config_loader
 
-def debug_entity_lookup():
-    """Debug entity lookup with detailed logging"""
+# Add the src directory to the path
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+from sovd_server.config_loader import config_loader
+
+def test_server_config():
+    """Test configuration loading in server context"""
     
-    print("Debugging Entity Lookup in Server Context")
-    print("=" * 50)
+    print("Testing Server Configuration Loading")
+    print("=" * 40)
     
-    # Load all configs
+    # Test the exact same initialization as in the server
+    print("1. Loading all configurations...")
     config_loader.load_all_configs()
     
-    # Test the exact same logic as in the server
+    print("2. Testing entity lookup...")
     entity_path = "/engine"
-    print(f"Looking up entity: {entity_path}")
-    
     entity = None
     for entity_type in ['areas', 'components', 'apps']:
         print(f"  Checking {entity_type}...")
@@ -31,32 +34,37 @@ def debug_entity_lookup():
             print(f"  ✗ Not found in {entity_type}")
     
     if not entity:
-        print("  ✗ Entity not found in any collection")
+        print("  ✗ Entity not found!")
         return False
     
     print(f"  Entity details:")
     print(f"    - ID: {entity['id']}")
     print(f"    - Name: {entity['name']}")
-    print(f"    - Endpoints: {list(entity['endpoints'].keys())}")
     print(f"    - Resources: {list(entity.get('resources', {}).keys())}")
     
-    # Test data resource lookup
-    print(f"\nTesting data resource lookup for {entity_path}...")
+    print("\n3. Testing data resource lookup...")
     resource_files = entity.get('resources', {}).get('data_resources', [])
     print(f"  Resource files: {resource_files}")
     
     for resource_file in resource_files:
-        print(f"  Loading resource file: {resource_file}")
+        print(f"  Loading {resource_file}...")
         try:
             resource_config = config_loader.load_resource_config('data', resource_file)
             resources = resource_config.get('data_resources', [])
-            print(f"    Found {len(resources)} resources")
+            print(f"    ✓ Loaded {len(resources)} resources")
             for resource in resources:
                 print(f"      - {resource['id']}: {resource['name']}")
         except Exception as e:
-            print(f"    Error loading {resource_file}: {e}")
+            print(f"    ✗ Error: {e}")
+    
+    print("\n4. Testing specific resource lookup...")
+    resource = config_loader.get_data_resource(entity_path, 'SoftwarePartNumber')
+    if resource:
+        print(f"  ✓ SoftwarePartNumber found: {resource['data']['value']}")
+    else:
+        print(f"  ✗ SoftwarePartNumber not found")
     
     return True
 
 if __name__ == '__main__':
-    debug_entity_lookup()
+    test_server_config()

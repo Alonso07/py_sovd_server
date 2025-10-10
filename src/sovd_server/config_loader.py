@@ -13,8 +13,12 @@ from pathlib import Path
 class SOVDConfigLoader:
     """Loads and manages SOVD configuration from YAML files"""
     
-    def __init__(self, config_dir: str = "config"):
-        self.config_dir = Path(config_dir)
+    def __init__(self, config_dir: str = None):
+        if config_dir is None:
+            # Default to the config directory relative to this file
+            self.config_dir = Path(__file__).parent / "config"
+        else:
+            self.config_dir = Path(config_dir)
         self.gateway_config = None
         self.entity_configs = {}
         self.resource_configs = {}
@@ -56,8 +60,10 @@ class SOVDConfigLoader:
     def load_resource_config(self, resource_type: str, resource_file: str) -> Dict[str, Any]:
         """Load a specific resource configuration file"""
         # Handle both full paths and just filenames
-        if resource_file.startswith('config/resources/'):
-            config_file = Path(resource_file)
+        if resource_file.startswith('config/'):
+            # Strip the 'config/' prefix and resolve relative to config_dir
+            relative_path = resource_file.replace('config/', '')
+            config_file = self.config_dir / relative_path
         else:
             config_file = self.config_dir / "resources" / resource_type / resource_file
         

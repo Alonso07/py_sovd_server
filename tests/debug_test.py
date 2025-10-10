@@ -6,10 +6,10 @@ Debug test for the enhanced server
 import os
 import sys
 
-# Add the current directory to Python path
-sys.path.insert(0, os.path.dirname(__file__))
+# Add the src directory to the path
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from config_loader import config_loader
+from sovd_server.config_loader import config_loader
 
 # Load configuration
 config_loader.load_all_configs()

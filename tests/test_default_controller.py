@@ -1,4 +1,9 @@
 import unittest
+import sys
+import os
+
+# Add the generated directory to the path
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'generated'))
 
 from flask import json
 

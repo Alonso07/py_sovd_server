@@ -12,10 +12,18 @@ from flask_cors import CORS
 from datetime import datetime
 import json
 
-# Add the generated server to the path
-sys.path.append(os.path.join(os.path.dirname(__file__), 'generated_server'))
+# Add the current directory to the path first to ensure we get the local config_loader
+current_dir = os.path.dirname(__file__)
+sys.path.insert(0, current_dir)
 
-from config_loader import config_loader
+try:
+    from .config_loader import config_loader
+except ImportError:
+    from config_loader import config_loader
+
+# Add the generated server to the path
+generated_path = os.path.join(os.path.dirname(__file__), '..', '..', 'generated')
+sys.path.insert(0, generated_path)
 from sovd_server.models.entity_collection import EntityCollection
 from sovd_server.models.entity_reference import EntityReference
 from sovd_server.models.entity_capabilities import EntityCapabilities
@@ -25,6 +33,8 @@ from sovd_server.models.operation import Operation
 from sovd_server.models.operation_collection import OperationCollection
 from sovd_server.models.fault import Fault
 from sovd_server.models.fault_collection import FaultCollection
+from sovd_server.models.fault_reference import FaultReference
+from sovd_server.models.fault_status import FaultStatus
 from sovd_server.models.mode import Mode
 from sovd_server.models.mode_collection import ModeCollection
 from sovd_server.models.version_info import VersionInfo
@@ -109,6 +119,10 @@ def entity_capabilities(entity_path):
     """Get capabilities of an Entity"""
     
     try:
+        # Ensure entity_path starts with /
+        if not entity_path.startswith('/'):
+            entity_path = '/' + entity_path
+            
         logger.info(f"Entity capabilities route called with path: {entity_path}")
         logger.info(f"Request URL: {request.url}")
         logger.info(f"Request path: {request.path}")
@@ -149,6 +163,10 @@ def entity_capabilities(entity_path):
 def data_resources(entity_path):
     """Get data resources for an entity"""
     try:
+        # Ensure entity_path starts with /
+        if not entity_path.startswith('/'):
+            entity_path = '/' + entity_path
+            
         # Find entity and load its data resources
         entity = None
         for entity_type in ['areas', 'components', 'apps']:
@@ -189,6 +207,10 @@ def data_resources(entity_path):
 def data_resource(entity_path, data_id):
     """Get a specific data resource"""
     try:
+        # Ensure entity_path starts with /
+        if not entity_path.startswith('/'):
+            entity_path = '/' + entity_path
+            
         resource_data = config_loader.get_data_resource(entity_path, data_id)
         
         if not resource_data:
@@ -212,6 +234,10 @@ def data_resource(entity_path, data_id):
 def operations(entity_path):
     """Get operations for an entity"""
     try:
+        # Ensure entity_path starts with /
+        if not entity_path.startswith('/'):
+            entity_path = '/' + entity_path
+            
         # Find entity and load its operations
         entity = None
         for entity_type in ['areas', 'components', 'apps']:
@@ -234,8 +260,7 @@ def operations(entity_path):
                 operation = Operation(
                     id=op_data['id'],
                     name=op_data['name'],
-                    description=op_data['description'],
-                    tags=op_data.get('tags', [])
+                    description=op_data['description']
                 )
                 operations.append(operation)
         
@@ -251,6 +276,10 @@ def operations(entity_path):
 def operation(entity_path, operation_id):
     """Get a specific operation"""
     try:
+        # Ensure entity_path starts with /
+        if not entity_path.startswith('/'):
+            entity_path = '/' + entity_path
+            
         operation_data = config_loader.get_operation(entity_path, operation_id)
         
         if not operation_data:
@@ -259,8 +288,7 @@ def operation(entity_path, operation_id):
         operation = Operation(
             id=operation_data['id'],
             name=operation_data['name'],
-            description=operation_data['description'],
-            tags=operation_data.get('tags', [])
+            description=operation_data['description']
         )
         
         logger.info(f"Operation requested: {entity_path}/{operation_id}")
@@ -273,6 +301,10 @@ def operation(entity_path, operation_id):
 def start_operation_execution(entity_path, operation_id):
     """Start execution of an operation"""
     try:
+        # Ensure entity_path starts with /
+        if not entity_path.startswith('/'):
+            entity_path = '/' + entity_path
+            
         operation_data = config_loader.get_operation(entity_path, operation_id)
         
         if not operation_data:
@@ -304,6 +336,10 @@ def start_operation_execution(entity_path, operation_id):
 def faults(entity_path):
     """Get faults for an entity"""
     try:
+        # Ensure entity_path starts with /
+        if not entity_path.startswith('/'):
+            entity_path = '/' + entity_path
+            
         faults_data = config_loader.get_faults(entity_path)
         
         if not faults_data:
@@ -311,15 +347,25 @@ def faults(entity_path):
             
         faults = []
         for fault_data in faults_data:
-            fault = Fault(
-                id=fault_data['id'],
-                name=fault_data['name'],
-                description=fault_data['description'],
-                severity=fault_data['severity'],
-                scope=fault_data['scope'],
-                status=fault_data['status'],
-                tags=fault_data.get('tags', [])
+            # Create FaultStatus object with default values
+            fault_status = FaultStatus(
+                test_failed='false',
+                confirmed_dtc='false',
+                aggregated_status=fault_data.get('status', 'inactive')
             )
+            
+            # Create FaultReference object
+            fault_ref = FaultReference(
+                code=fault_data['id'],
+                scope=fault_data.get('scope', 'system'),
+                display_code=fault_data['id'],
+                fault_name=fault_data['name'],
+                severity=fault_data.get('severity', 'warning'),
+                status=fault_status
+            )
+            
+            # Create Fault object with the reference
+            fault = Fault(item=fault_ref)
             faults.append(fault)
         
         collection = FaultCollection(items=faults)
@@ -334,6 +380,10 @@ def faults(entity_path):
 def modes(entity_path):
     """Get modes for an entity"""
     try:
+        # Ensure entity_path starts with /
+        if not entity_path.startswith('/'):
+            entity_path = '/' + entity_path
+            
         modes_data = config_loader.get_modes(entity_path)
         
         if not modes_data:
@@ -344,8 +394,8 @@ def modes(entity_path):
             mode = Mode(
                 id=mode_data['id'],
                 name=mode_data['name'],
-                description=mode_data['description'],
-                tags=mode_data.get('tags', [])
+                value=mode_data.get('value', mode_data['id']),
+                description=mode_data['description']
             )
             modes.append(mode)
         

@@ -11,19 +11,23 @@ import subprocess
 def main():
     """Main entry point for running the enhanced server"""
     
-    # Check if we're in the right directory
-    if not os.path.exists('enhanced_server.py'):
-        print("Error: enhanced_server.py not found. Please run from the correct directory.")
+    # Get the directory where this script is located
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    # Check if enhanced_server.py exists in the same directory
+    if not os.path.exists(os.path.join(script_dir, 'enhanced_server.py')):
+        print("Error: enhanced_server.py not found. Please ensure the file is in the correct location.")
         sys.exit(1)
     
     # Check if config directory exists
-    if not os.path.exists('config'):
+    if not os.path.exists(os.path.join(script_dir, 'config')):
         print("Error: config directory not found. Please ensure configuration files are present.")
         sys.exit(1)
     
     # Check if generated server exists
-    if not os.path.exists('generated_server'):
-        print("Error: generated_server directory not found. Please ensure the generated server is present.")
+    generated_path = os.path.join(script_dir, '..', '..', 'generated')
+    if not os.path.exists(generated_path):
+        print("Error: generated directory not found. Please ensure the generated server is present.")
         sys.exit(1)
     
     print("Starting Enhanced SOVD Server...")
@@ -32,7 +36,7 @@ def main():
     
     try:
         # Run the enhanced server
-        subprocess.run([sys.executable, 'enhanced_server.py'], check=True)
+        subprocess.run([sys.executable, os.path.join(script_dir, 'enhanced_server.py')], check=True)
     except KeyboardInterrupt:
         print("\nServer stopped by user")
     except subprocess.CalledProcessError as e:
