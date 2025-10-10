@@ -1,0 +1,161 @@
+# Engine Modes Configuration
+# Contains actual mode data for engine-related endpoints
+
+modes:
+  - id: "normal"
+    name: "Normal Operation Mode"
+    description: "Standard engine operation mode"
+    category: "operation"
+    groups: ["operation", "engine", "standard"]
+    tags: ["normal", "operation", "engine", "standard"]
+    
+    # Mode details
+    details:
+      mode_id: "normal"
+      name: "Normal Operation Mode"
+      description: "Standard engine operation with full functionality"
+      status: "active"
+      priority: 1
+      requirements:
+        engine_temperature: "> 60°C"
+        oil_pressure: "> 1.5 bar"
+        fuel_level: "> 10%"
+      capabilities:
+        - "Full power output"
+        - "All safety systems active"
+        - "Normal fuel consumption"
+        - "Standard emissions control"
+      limitations:
+        - "No performance modifications"
+        - "Standard rev limit"
+        - "Normal shift points"
+      activation_conditions:
+        - "Engine warmed up"
+        - "All systems normal"
+        - "No critical faults"
+      deactivation_conditions:
+        - "Critical fault detected"
+        - "Manual mode selection"
+        - "System shutdown"
+        
+    # JSON schema for mode data
+    schema:
+      type: "object"
+      properties:
+        mode_id:
+          type: "string"
+          description: "Unique mode identifier"
+        name:
+          type: "string"
+          description: "Mode display name"
+        description:
+          type: "string"
+          description: "Mode description"
+        status:
+          type: "string"
+          enum: ["active", "inactive", "pending", "error"]
+          description: "Current mode status"
+        priority:
+          type: "integer"
+          minimum: 1
+          maximum: 10
+          description: "Mode priority (1=highest)"
+        requirements:
+          type: "object"
+          description: "Requirements for mode activation"
+        capabilities:
+          type: "array"
+          items:
+            type: "string"
+          description: "Mode capabilities"
+        limitations:
+          type: "array"
+          items:
+            type: "string"
+          description: "Mode limitations"
+        activation_conditions:
+          type: "array"
+          items:
+            type: "string"
+          description: "Conditions for activation"
+        deactivation_conditions:
+          type: "array"
+          items:
+            type: "string"
+          description: "Conditions for deactivation"
+      required: ["mode_id", "name", "description", "status", "priority"]
+      
+  - id: "eco"
+    name: "Eco Mode"
+    description: "Fuel-efficient operation mode"
+    category: "efficiency"
+    groups: ["efficiency", "engine", "fuel_saving"]
+    tags: ["eco", "efficiency", "fuel_saving", "environmental"]
+    
+    details:
+      mode_id: "eco"
+      name: "Eco Mode"
+      description: "Fuel-efficient operation with optimized settings"
+      status: "inactive"
+      priority: 2
+      requirements:
+        engine_temperature: "> 60°C"
+        fuel_level: "> 20%"
+        no_critical_faults: true
+      capabilities:
+        - "Optimized fuel consumption"
+        - "Reduced power output"
+        - "Eco-friendly shift points"
+        - "Enhanced emissions control"
+      limitations:
+        - "Reduced acceleration"
+        - "Lower top speed"
+        - "Delayed response"
+        - "Limited performance features"
+      activation_conditions:
+        - "Manual selection"
+        - "Eco mode available"
+        - "No performance requirements"
+      deactivation_conditions:
+        - "Manual deselection"
+        - "Performance mode selected"
+        - "System fault"
+        
+  - id: "sport"
+    name: "Sport Mode"
+    description: "High-performance operation mode"
+    category: "performance"
+    groups: ["performance", "engine", "sport"]
+    tags: ["sport", "performance", "high_power", "racing"]
+    
+    details:
+      mode_id: "sport"
+      name: "Sport Mode"
+      description: "High-performance operation with enhanced settings"
+      status: "inactive"
+      priority: 3
+      requirements:
+        engine_temperature: "> 80°C"
+        oil_pressure: "> 2.0 bar"
+        fuel_level: "> 30%"
+        no_faults: true
+      capabilities:
+        - "Enhanced power output"
+        - "Faster response times"
+        - "Sport shift points"
+        - "Performance optimizations"
+      limitations:
+        - "Higher fuel consumption"
+        - "Increased wear"
+        - "Limited availability"
+        - "Temperature monitoring required"
+      activation_conditions:
+        - "Manual selection"
+        - "Engine fully warmed up"
+        - "No system faults"
+        - "Adequate fuel level"
+      deactivation_conditions:
+        - "Manual deselection"
+        - "Temperature warning"
+        - "Fuel level low"
+        - "System fault"

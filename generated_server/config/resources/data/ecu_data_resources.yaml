@@ -1,0 +1,210 @@
+# ECU Data Resources Configuration
+# Contains actual data for ECU-related endpoints
+
+data_resources:
+  - id: "ECUSerialNumber"
+    name: "ECU Serial Number"
+    description: "Unique serial number of the Engine Control Unit"
+    category: "identification"
+    groups: ["identification", "hardware"]
+    tags: ["serial", "identification", "ecu", "hardware"]
+    
+    data:
+      value: "ECU-2024-001234"
+      manufacturer: "Bosch"
+      model: "MED17.5.5"
+      hardware_version: "2.1"
+      production_date: "2024-01-10"
+      
+    schema:
+      type: "object"
+      properties:
+        value:
+          type: "string"
+          description: "Serial number"
+        manufacturer:
+          type: "string"
+          description: "ECU manufacturer"
+        model:
+          type: "string"
+          description: "ECU model"
+        hardware_version:
+          type: "string"
+          description: "Hardware version"
+        production_date:
+          type: "string"
+          format: "date"
+          description: "Production date"
+      required: ["value", "manufacturer", "model"]
+      
+  - id: "ECUVoltage"
+    name: "ECU Supply Voltage"
+    description: "Current supply voltage to the ECU"
+    category: "electrical"
+    groups: ["electrical", "power", "monitoring"]
+    tags: ["voltage", "electrical", "power", "ecu"]
+    
+    data:
+      value: 13.8
+      unit: "volts"
+      min_value: 9.0
+      max_value: 16.0
+      status: "normal"
+      timestamp: "2024-01-20T14:30:15.123Z"
+      
+    schema:
+      type: "object"
+      properties:
+        value:
+          type: "number"
+          minimum: 9.0
+          maximum: 16.0
+          description: "Voltage value"
+        unit:
+          type: "string"
+          enum: ["volts"]
+          description: "Unit of measurement"
+        min_value:
+          type: "number"
+          description: "Minimum safe voltage"
+        max_value:
+          type: "number"
+          description: "Maximum safe voltage"
+        status:
+          type: "string"
+          enum: ["normal", "low", "high", "critical"]
+          description: "Voltage status"
+        timestamp:
+          type: "string"
+          format: "date-time"
+          description: "Measurement timestamp"
+      required: ["value", "unit", "status", "timestamp"]
+      
+  - id: "ECUTemperature"
+    name: "ECU Temperature"
+    description: "Current operating temperature of the ECU"
+    category: "temperature"
+    groups: ["temperature", "monitoring", "ecu"]
+    tags: ["temperature", "ecu", "monitoring", "thermal"]
+    
+    data:
+      value: 45.2
+      unit: "celsius"
+      min_value: -40
+      max_value: 85
+      status: "normal"
+      cooling_fan_active: false
+      timestamp: "2024-01-20T14:30:15.123Z"
+      
+    schema:
+      type: "object"
+      properties:
+        value:
+          type: "number"
+          minimum: -40
+          maximum: 85
+          description: "Temperature value"
+        unit:
+          type: "string"
+          enum: ["celsius"]
+          description: "Unit of measurement"
+        min_value:
+          type: "number"
+          description: "Minimum operating temperature"
+        max_value:
+          type: "number"
+          description: "Maximum operating temperature"
+        status:
+          type: "string"
+          enum: ["normal", "warning", "critical"]
+          description: "Temperature status"
+        cooling_fan_active:
+          type: "boolean"
+          description: "Whether cooling fan is active"
+        timestamp:
+          type: "string"
+          format: "date-time"
+          description: "Measurement timestamp"
+      required: ["value", "unit", "status", "timestamp"]
+      
+  - id: "ECUMemoryUsage"
+    name: "ECU Memory Usage"
+    description: "Current memory usage statistics for the ECU"
+    category: "system"
+    groups: ["system", "memory", "performance"]
+    tags: ["memory", "system", "performance", "ecu"]
+    
+    data:
+      total_memory: 1048576  # 1MB in KB
+      used_memory: 524288    # 512KB in KB
+      free_memory: 524288    # 512KB in KB
+      usage_percentage: 50.0
+      memory_type: "flash"
+      timestamp: "2024-01-20T14:30:15.123Z"
+      
+    schema:
+      type: "object"
+      properties:
+        total_memory:
+          type: "number"
+          minimum: 0
+          description: "Total memory in KB"
+        used_memory:
+          type: "number"
+          minimum: 0
+          description: "Used memory in KB"
+        free_memory:
+          type: "number"
+          minimum: 0
+          description: "Free memory in KB"
+        usage_percentage:
+          type: "number"
+          minimum: 0
+          maximum: 100
+          description: "Memory usage percentage"
+        memory_type:
+          type: "string"
+          enum: ["flash", "ram", "eeprom"]
+          description: "Type of memory"
+        timestamp:
+          type: "string"
+          format: "date-time"
+          description: "Measurement timestamp"
+      required: ["total_memory", "used_memory", "free_memory", "usage_percentage", "timestamp"]
+      
+  - id: "SoftwarePartNumber"
+    name: "Software Part Number"
+    description: "Current software part number installed on the engine ECU"
+    category: "software"
+    groups: ["identification", "software"]
+    tags: ["software", "part_number", "identification", "ecu"]
+    
+    # Actual data that would be returned
+    data:
+      value: "SW-ENG-2024.1.0-REV-A"
+      version: "2024.1.0"
+      revision: "A"
+      build_date: "2024-01-15T10:30:00Z"
+      checksum: "a1b2c3d4e5f6"
+      
+    # JSON schema for validation
+    schema:
+      type: "object"
+      properties:
+        value:
+          type: "string"
+          description: "Software part number"
+        version:
+          type: "string"
+          description: "Software version"
+        revision:
+          type: "string"
+          description: "Revision letter"
+        build_date:
+          type: "string"
+          format: "date-time"
+          description: "Build timestamp"
+        checksum:
+          type: "string"
+          description: "Checksum for verification"
+      required: ["value", "version", "revision", "build_date"]

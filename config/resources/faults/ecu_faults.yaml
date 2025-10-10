@@ -1,0 +1,67 @@
+# ECU Faults Configuration
+# Contains fault definitions for ECU-related issues
+
+faults:
+  - id: "ECU-001"
+    name: "ECU Communication Error"
+    description: "Loss of communication with the Engine Control Unit"
+    severity: "critical"
+    scope: "system"
+    status: "active"
+    tags: ["communication", "ecu", "critical", "system"]
+    
+  - id: "ECU-002"
+    name: "ECU Memory Error"
+    description: "Memory corruption or failure in ECU flash memory"
+    severity: "critical"
+    scope: "ecu"
+    status: "inactive"
+    tags: ["memory", "ecu", "critical", "hardware"]
+    
+  - id: "ECU-003"
+    name: "ECU Temperature Warning"
+    description: "ECU operating temperature exceeds normal range"
+    severity: "warning"
+    scope: "ecu"
+    status: "active"
+    tags: ["temperature", "ecu", "warning", "thermal"]
+    
+  - id: "ECU-004"
+    name: "ECU Voltage Low"
+    description: "ECU supply voltage below minimum threshold"
+    severity: "warning"
+    scope: "electrical"
+    status: "inactive"
+    tags: ["voltage", "ecu", "warning", "electrical"]
+    
+  - id: "ECU-005"
+    name: "ECU Calibration Error"
+    description: "Calibration data validation failed"
+    severity: "error"
+    scope: "calibration"
+    status: "active"
+    tags: ["calibration", "ecu", "error", "software"]
+    
+  - id: "ECU-006"
+    name: "ECU Software Version Mismatch"
+    description: "Installed software version does not match expected version"
+    severity: "warning"
+    scope: "software"
+    status: "inactive"
+    tags: ["software", "ecu", "warning", "version"]
+    
+  - id: "ECU-007"
+    name: "ECU Sensor Communication Error"
+    description: "Communication failure with engine sensors"
+    severity: "error"
+    scope: "sensors"
+    status: "active"
+    tags: ["sensors", "ecu", "error", "communication"]
+    
+  - id: "ECU-008"
+    name: "ECU Performance Degradation"
+    description: "ECU processing performance below expected levels"
+    severity: "warning"
+    scope: "performance"
+    status: "inactive"
+    tags: ["performance", "ecu", "warning", "system"]

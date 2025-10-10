@@ -1,0 +1,92 @@
+# Areas Entity Configuration
+# Defines vehicle areas and their capabilities
+
+entity_type: "areas"
+description: "Vehicle areas (engine, transmission, etc.)"
+
+entities:
+  - id: "/engine"
+    name: "Engine Area"
+    href: "/engine"
+    description: "Engine compartment and related systems"
+    tags: ["diagnostics", "engine", "powertrain"]
+    
+    # Available endpoints for this entity
+    endpoints:
+      capabilities: "/engine"
+      data_resources: "/engine/data"
+      operations: "/engine/operations"
+      faults: "/engine/faults"
+      modes: "/engine/modes"
+      configurations: "/engine/configurations"
+      scripts: "/engine/scripts"
+      triggers: "/engine/triggers"
+      
+    # Resource references
+    resources:
+      data_resources:
+        - "config/resources/data/engine_data_resources.yaml"
+      operations:
+        - "config/resources/operations/engine_operations.yaml"
+      faults:
+        - "config/resources/faults/engine_faults.yaml"
+      modes:
+        - "config/resources/modes/engine_modes.yaml"
+      configurations:
+        - "config/resources/configurations/engine_configurations.yaml"
+        
+  - id: "/transmission"
+    name: "Transmission Area"
+    href: "/transmission"
+    description: "Transmission system and related components"
+    tags: ["diagnostics", "transmission", "powertrain"]
+    
+    endpoints:
+      capabilities: "/transmission"
+      data_resources: "/transmission/data"
+      operations: "/transmission/operations"
+      faults: "/transmission/faults"
+      modes: "/transmission/modes"
+      configurations: "/transmission/configurations"
+      scripts: "/transmission/scripts"
+      triggers: "/transmission/triggers"
+      
+    resources:
+      data_resources:
+        - "config/resources/data/transmission_data_resources.yaml"
+      operations:
+        - "config/resources/operations/transmission_operations.yaml"
+      faults:
+        - "config/resources/faults/transmission_faults.yaml"
+      modes:
+        - "config/resources/modes/transmission_modes.yaml"
+      configurations:
+        - "config/resources/configurations/transmission_configurations.yaml"
+        
+  - id: "/brakes"
+    name: "Brake System Area"
+    href: "/brakes"
+    description: "Brake system and safety components"
+    tags: ["diagnostics", "brakes", "safety"]
+    
+    endpoints:
+      capabilities: "/brakes"
+      data_resources: "/brakes/data"
+      operations: "/brakes/operations"
+      faults: "/brakes/faults"
+      modes: "/brakes/modes"
+      configurations: "/brakes/configurations"
+      scripts: "/brakes/scripts"
+      triggers: "/brakes/triggers"
+      
+    resources:
+      data_resources:
+        - "config/resources/data/brakes_data_resources.yaml"
+      operations:
+        - "config/resources/operations/brakes_operations.yaml"
+      faults:
+        - "config/resources/faults/brakes_faults.yaml"
+      modes:
+        - "config/resources/modes/brakes_modes.yaml"
+      configurations:
+        - "config/resources/configurations/brakes_configurations.yaml"

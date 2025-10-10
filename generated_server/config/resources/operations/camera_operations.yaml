@@ -1,0 +1,170 @@
+# Camera Operations Configuration
+# Contains actual operation data for camera-related endpoints
+
+operations:
+  - id: "calibratecamera"
+    name: "Calibrate Camera"
+    description: "Calibrate the front camera system for optimal performance"
+    category: "calibration"
+    groups: ["calibration", "camera", "maintenance"]
+    tags: ["calibration", "camera", "maintenance", "vision"]
+    
+    # Operation execution details
+    execution:
+      type: "asynchronous"
+      timeout: 300  # seconds
+      requires_confirmation: true
+      
+    # Request payload for PUT operation
+    request_payload:
+      calibration_type:
+        type: "string"
+        enum: ["automatic", "manual", "advanced"]
+        default: "automatic"
+        description: "Type of calibration to perform"
+        
+      target_distance:
+        type: "number"
+        minimum: 1.0
+        maximum: 100.0
+        default: 10.0
+        description: "Target distance for calibration in meters"
+        
+      brightness_adjustment:
+        type: "boolean"
+        default: true
+        description: "Whether to adjust brightness during calibration"
+        
+      save_settings:
+        type: "boolean"
+        default: true
+        description: "Whether to save calibration settings"
+        
+    # Response body for successful execution
+    response_success:
+      execution_id: "exec_12345"
+      status: "started"
+      estimated_duration: 180
+      message: "Camera calibration started successfully"
+      timestamp: "2024-01-20T14:30:15.123Z"
+      
+    # Response body for GET status
+    response_status:
+      execution_id: "exec_12345"
+      status: "running"  # started, running, completed, failed
+      progress: 65
+      current_step: "lens_focus_adjustment"
+      estimated_remaining: 60
+      started_at: "2024-01-20T14:30:15.123Z"
+      updated_at: "2024-01-20T14:32:45.456Z"
+      
+    # Response body for completed execution
+    response_completed:
+      execution_id: "exec_12345"
+      status: "completed"
+      result: "success"
+      calibration_data:
+        focus_distance: 10.2
+        brightness_level: 85
+        contrast_level: 78
+        sharpness_level: 92
+        calibration_accuracy: 98.5
+      duration: 165
+      completed_at: "2024-01-20T14:33:00.789Z"
+      
+    # Error response
+    response_error:
+      execution_id: "exec_12345"
+      status: "failed"
+      error_code: "CALIBRATION_FAILED"
+      error_message: "Unable to achieve proper focus calibration"
+      error_details:
+        step: "lens_focus_adjustment"
+        reason: "hardware_malfunction"
+        suggested_action: "Check camera hardware and retry"
+      failed_at: "2024-01-20T14:32:30.123Z"
+      
+  - id: "adjustbrightness"
+    name: "Adjust Brightness"
+    description: "Adjust camera brightness settings"
+    category: "configuration"
+    groups: ["configuration", "camera", "image_quality"]
+    tags: ["brightness", "configuration", "camera", "image_quality"]
+    
+    execution:
+      type: "synchronous"
+      timeout: 30
+      requires_confirmation: false
+      
+    request_payload:
+      brightness_level:
+        type: "integer"
+        minimum: 0
+        maximum: 100
+        default: 50
+        description: "Brightness level (0-100)"
+        
+      auto_adjust:
+        type: "boolean"
+        default: false
+        description: "Enable automatic brightness adjustment"
+        
+    response_success:
+      status: "success"
+      new_brightness: 75
+      auto_adjust_enabled: false
+      timestamp: "2024-01-20T14:30:15.123Z"
+      
+    response_error:
+      status: "error"
+      error_code: "INVALID_BRIGHTNESS"
+      error_message: "Brightness level out of valid range"
+      
+  - id: "captureimage"
+    name: "Capture Image"
+    description: "Capture a single image from the camera"
+    category: "capture"
+    groups: ["capture", "camera", "imaging"]
+    tags: ["capture", "image", "camera", "snapshot"]
+    
+    execution:
+      type: "synchronous"
+      timeout: 10
+      requires_confirmation: false
+      
+    request_payload:
+      resolution:
+        type: "string"
+        enum: ["1920x1080", "1280x720", "640x480"]
+        default: "1920x1080"
+        description: "Image resolution"
+        
+      format:
+        type: "string"
+        enum: ["jpeg", "png", "raw"]
+        default: "jpeg"
+        description: "Image format"
+        
+      quality:
+        type: "integer"
+        minimum: 1
+        maximum: 100
+        default: 85
+        description: "Image quality (1-100)"
+        
+    response_success:
+      status: "success"
+      image_id: "img_67890"
+      resolution: "1920x1080"
+      format: "jpeg"
+      file_size: 245760
+      file_path: "/images/captured/img_67890.jpg"
+      timestamp: "2024-01-20T14:30:15.123Z"
+      
+    response_error:
+      status: "error"
+      error_code: "CAPTURE_FAILED"
+      error_message: "Unable to capture image"
+      error_details:
+        reason: "camera_busy"
+        suggested_action: "Wait and retry"

@@ -1,0 +1,161 @@
+# Engine Data Resources Configuration
+# Contains actual data for engine-related endpoints
+
+data_resources:
+  - id: "SoftwarePartNumber"
+    name: "Software Part Number"
+    description: "Current software part number installed on the engine ECU"
+    category: "software"
+    groups: ["identification", "software"]
+    tags: ["software", "part_number", "identification", "ecu"]
+    
+    # Actual data that would be returned
+    data:
+      value: "SW-ENG-2024.1.0-REV-A"
+      version: "2024.1.0"
+      revision: "A"
+      build_date: "2024-01-15T10:30:00Z"
+      checksum: "a1b2c3d4e5f6"
+      
+    # JSON schema for validation
+    schema:
+      type: "object"
+      properties:
+        value:
+          type: "string"
+          description: "Software part number"
+        version:
+          type: "string"
+          description: "Software version"
+        revision:
+          type: "string"
+          description: "Revision letter"
+        build_date:
+          type: "string"
+          format: "date-time"
+          description: "Build timestamp"
+        checksum:
+          type: "string"
+          description: "Checksum for verification"
+      required: ["value", "version", "revision", "build_date"]
+      
+  - id: "EngineRPM"
+    name: "Engine RPM"
+    description: "Current engine revolutions per minute"
+    category: "performance"
+    groups: ["performance", "engine"]
+    tags: ["rpm", "performance", "engine", "realtime"]
+    
+    data:
+      value: 2500
+      unit: "rpm"
+      min_value: 0
+      max_value: 8000
+      timestamp: "2024-01-20T14:30:15.123Z"
+      
+    schema:
+      type: "object"
+      properties:
+        value:
+          type: "number"
+          minimum: 0
+          maximum: 8000
+          description: "RPM value"
+        unit:
+          type: "string"
+          enum: ["rpm"]
+          description: "Unit of measurement"
+        min_value:
+          type: "number"
+          description: "Minimum possible value"
+        max_value:
+          type: "number"
+          description: "Maximum possible value"
+        timestamp:
+          type: "string"
+          format: "date-time"
+          description: "Measurement timestamp"
+      required: ["value", "unit", "timestamp"]
+      
+  - id: "EngineTemperature"
+    name: "Engine Temperature"
+    description: "Current engine coolant temperature"
+    category: "temperature"
+    groups: ["temperature", "engine", "monitoring"]
+    tags: ["temperature", "coolant", "engine", "monitoring"]
+    
+    data:
+      value: 85.5
+      unit: "celsius"
+      min_value: -40
+      max_value: 120
+      status: "normal"
+      timestamp: "2024-01-20T14:30:15.123Z"
+      
+    schema:
+      type: "object"
+      properties:
+        value:
+          type: "number"
+          minimum: -40
+          maximum: 120
+          description: "Temperature value"
+        unit:
+          type: "string"
+          enum: ["celsius", "fahrenheit"]
+          description: "Unit of measurement"
+        min_value:
+          type: "number"
+          description: "Minimum possible value"
+        max_value:
+          type: "number"
+          description: "Maximum possible value"
+        status:
+          type: "string"
+          enum: ["normal", "warning", "critical"]
+          description: "Temperature status"
+        timestamp:
+          type: "string"
+          format: "date-time"
+          description: "Measurement timestamp"
+      required: ["value", "unit", "status", "timestamp"]
+      
+  - id: "FuelLevel"
+    name: "Fuel Level"
+    description: "Current fuel tank level"
+    category: "fuel"
+    groups: ["fuel", "consumption"]
+    tags: ["fuel", "level", "tank", "consumption"]
+    
+    data:
+      value: 75.2
+      unit: "percent"
+      volume_liters: 45.8
+      range_km: 420
+      timestamp: "2024-01-20T14:30:15.123Z"
+      
+    schema:
+      type: "object"
+      properties:
+        value:
+          type: "number"
+          minimum: 0
+          maximum: 100
+          description: "Fuel level percentage"
+        unit:
+          type: "string"
+          enum: ["percent"]
+          description: "Unit of measurement"
+        volume_liters:
+          type: "number"
+          minimum: 0
+          description: "Volume in liters"
+        range_km:
+          type: "number"
+          minimum: 0
+          description: "Estimated range in kilometers"
+        timestamp:
+          type: "string"
+          format: "date-time"
+          description: "Measurement timestamp"
+      required: ["value", "unit", "timestamp"]

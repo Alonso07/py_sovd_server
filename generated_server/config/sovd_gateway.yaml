@@ -1,0 +1,85 @@
+# SOVD Gateway Configuration
+# Main configuration file for the SOVD server
+
+gateway:
+  name: "SOVD Gateway Server"
+  version: "1.0.0"
+  
+  # Network Configuration
+  network:
+    host: "0.0.0.0"
+    port: 8080
+    debug: true
+    
+  # Logging Configuration
+  logging:
+    level: "INFO"
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    file: "logs/sovd_gateway.log"
+    max_size: "10MB"
+    backup_count: 5
+    
+  # Security Configuration (disabled for testing)
+  security:
+    enabled: false
+    auth_type: "none"  # none, bearer, api_key
+    cors:
+      enabled: true
+      origins: ["*"]
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+      headers: ["Content-Type", "Authorization"]
+      
+  # Entity Configuration Files
+  entities:
+    - name: "areas"
+      config_file: "config/entities/areas.yaml"
+      description: "Vehicle areas (engine, transmission, etc.)"
+      
+    - name: "components" 
+      config_file: "config/entities/components.yaml"
+      description: "Vehicle components (ECU, sensors, etc.)"
+      
+    - name: "apps"
+      config_file: "config/entities/apps.yaml"
+      description: "Diagnostic applications"
+      
+  # Resource Configuration Files
+  resources:
+    data_resources:
+      config_dir: "config/resources/data/"
+      description: "Data resource configurations"
+      
+    operations:
+      config_dir: "config/resources/operations/"
+      description: "Operation configurations"
+      
+    faults:
+      config_dir: "config/resources/faults/"
+      description: "Fault configurations"
+      
+    modes:
+      config_dir: "config/resources/modes/"
+      description: "Mode configurations"
+      
+    configurations:
+      config_dir: "config/resources/configurations/"
+      description: "Configuration resource settings"
+      
+  # API Configuration
+  api:
+    base_path: "/"
+    openapi_spec: "sovd_server/openapi/openapi.yaml"
+    response_timeout: 30
+    max_request_size: "10MB"
+    
+  # Health Check
+  health_check:
+    enabled: true
+    endpoint: "/health"
+    interval: 30  # seconds
+    
+  # Monitoring
+  monitoring:
+    metrics_enabled: true
+    prometheus_endpoint: "/metrics"
+    performance_logging: true

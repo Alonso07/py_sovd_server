@@ -1,0 +1,43 @@
+# ECU Modes Configuration
+# Contains operational modes for the Engine Control Unit
+
+modes:
+  - id: "ECU-NORMAL"
+    name: "Normal Operation Mode"
+    description: "Standard ECU operation with all systems active"
+    tags: ["normal", "operation", "ecu", "standard"]
+    
+  - id: "ECU-DIAGNOSTIC"
+    name: "Diagnostic Mode"
+    description: "ECU in diagnostic mode for testing and troubleshooting"
+    tags: ["diagnostic", "testing", "ecu", "maintenance"]
+    
+  - id: "ECU-SAFE"
+    name: "Safe Mode"
+    description: "ECU operating in safe mode with limited functionality"
+    tags: ["safe", "limited", "ecu", "protection"]
+    
+  - id: "ECU-CALIBRATION"
+    name: "Calibration Mode"
+    description: "ECU in calibration mode for parameter adjustment"
+    tags: ["calibration", "tuning", "ecu", "adjustment"]
+    
+  - id: "ECU-MAINTENANCE"
+    name: "Maintenance Mode"
+    description: "ECU in maintenance mode for service operations"
+    tags: ["maintenance", "service", "ecu", "repair"]
+    
+  - id: "ECU-EMERGENCY"
+    name: "Emergency Mode"
+    description: "ECU in emergency mode with minimal functionality"
+    tags: ["emergency", "minimal", "ecu", "critical"]
+    
+  - id: "ECU-SLEEP"
+    name: "Sleep Mode"
+    description: "ECU in low-power sleep mode"
+    tags: ["sleep", "low-power", "ecu", "energy"]
+    
+  - id: "ECU-BOOT"
+    name: "Boot Mode"
+    description: "ECU in boot/startup mode during initialization"
+    tags: ["boot", "startup", "ecu", "initialization"]

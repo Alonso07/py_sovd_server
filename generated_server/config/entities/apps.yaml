@@ -1,0 +1,90 @@
+# Apps Entity Configuration
+# Defines diagnostic applications and their capabilities
+
+entity_type: "apps"
+description: "Diagnostic applications"
+
+entities:
+  - id: "/diagnostics"
+    name: "Diagnostics App"
+    href: "/diagnostics"
+    description: "Main diagnostic application"
+    tags: ["app", "diagnostics", "maintenance"]
+    
+    endpoints:
+      capabilities: "/diagnostics"
+      data_resources: "/diagnostics/data"
+      operations: "/diagnostics/operations"
+      faults: "/diagnostics/faults"
+      modes: "/diagnostics/modes"
+      configurations: "/diagnostics/configurations"
+      scripts: "/diagnostics/scripts"
+      triggers: "/diagnostics/triggers"
+      
+    resources:
+      data_resources:
+        - "config/resources/data/diagnostics_data_resources.yaml"
+      operations:
+        - "config/resources/operations/diagnostics_operations.yaml"
+      faults:
+        - "config/resources/faults/diagnostics_faults.yaml"
+      modes:
+        - "config/resources/modes/diagnostics_modes.yaml"
+      configurations:
+        - "config/resources/configurations/diagnostics_configurations.yaml"
+        
+  - id: "/calibration"
+    name: "Calibration App"
+    href: "/calibration"
+    description: "Calibration and adjustment application"
+    tags: ["app", "calibration", "adjustment", "maintenance"]
+    
+    endpoints:
+      capabilities: "/calibration"
+      data_resources: "/calibration/data"
+      operations: "/calibration/operations"
+      faults: "/calibration/faults"
+      modes: "/calibration/modes"
+      configurations: "/calibration/configurations"
+      scripts: "/calibration/scripts"
+      triggers: "/calibration/triggers"
+      
+    resources:
+      data_resources:
+        - "config/resources/data/calibration_data_resources.yaml"
+      operations:
+        - "config/resources/operations/calibration_operations.yaml"
+      faults:
+        - "config/resources/faults/calibration_faults.yaml"
+      modes:
+        - "config/resources/modes/calibration_modes.yaml"
+      configurations:
+        - "config/resources/configurations/calibration_configurations.yaml"
+        
+  - id: "/monitoring"
+    name: "Monitoring App"
+    href: "/monitoring"
+    description: "Real-time monitoring application"
+    tags: ["app", "monitoring", "realtime", "telemetry"]
+    
+    endpoints:
+      capabilities: "/monitoring"
+      data_resources: "/monitoring/data"
+      operations: "/monitoring/operations"
+      faults: "/monitoring/faults"
+      modes: "/monitoring/modes"
+      configurations: "/monitoring/configurations"
+      scripts: "/monitoring/scripts"
+      triggers: "/monitoring/triggers"
+      
+    resources:
+      data_resources:
+        - "config/resources/data/monitoring_data_resources.yaml"
+      operations:
+        - "config/resources/operations/monitoring_operations.yaml"
+      faults:
+        - "config/resources/faults/monitoring_faults.yaml"
+      modes:
+        - "config/resources/modes/monitoring_modes.yaml"
+      configurations:
+        - "config/resources/configurations/monitoring_configurations.yaml"

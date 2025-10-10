@@ -1,0 +1,118 @@
+# Components Entity Configuration
+# Defines vehicle components and their capabilities
+
+entity_type: "components"
+description: "Vehicle components (ECU, sensors, etc.)"
+
+entities:
+  - id: "/engine/ecu"
+    name: "Engine Control Unit"
+    href: "/engine/ecu"
+    description: "Main engine control unit"
+    tags: ["ecu", "engine", "control", "diagnostics"]
+    
+    endpoints:
+      capabilities: "/engine/ecu"
+      data_resources: "/engine/ecu/data"
+      operations: "/engine/ecu/operations"
+      faults: "/engine/ecu/faults"
+      modes: "/engine/ecu/modes"
+      configurations: "/engine/ecu/configurations"
+      scripts: "/engine/ecu/scripts"
+      triggers: "/engine/ecu/triggers"
+      
+    resources:
+      data_resources:
+        - "config/resources/data/ecu_data_resources.yaml"
+      operations:
+        - "config/resources/operations/ecu_operations.yaml"
+      faults:
+        - "config/resources/faults/ecu_faults.yaml"
+      modes:
+        - "config/resources/modes/ecu_modes.yaml"
+      configurations:
+        - "config/resources/configurations/ecu_configurations.yaml"
+        
+  - id: "/engine/sensors"
+    name: "Engine Sensors"
+    href: "/engine/sensors"
+    description: "Engine sensor array"
+    tags: ["sensors", "engine", "monitoring"]
+    
+    endpoints:
+      capabilities: "/engine/sensors"
+      data_resources: "/engine/sensors/data"
+      operations: "/engine/sensors/operations"
+      faults: "/engine/sensors/faults"
+      modes: "/engine/sensors/modes"
+      configurations: "/engine/sensors/configurations"
+      scripts: "/engine/sensors/scripts"
+      triggers: "/engine/sensors/triggers"
+      
+    resources:
+      data_resources:
+        - "config/resources/data/engine_sensors_data_resources.yaml"
+      operations:
+        - "config/resources/operations/engine_sensors_operations.yaml"
+      faults:
+        - "config/resources/faults/engine_sensors_faults.yaml"
+      modes:
+        - "config/resources/modes/engine_sensors_modes.yaml"
+      configurations:
+        - "config/resources/configurations/engine_sensors_configurations.yaml"
+        
+  - id: "/transmission/tcu"
+    name: "Transmission Control Unit"
+    href: "/transmission/tcu"
+    description: "Transmission control unit"
+    tags: ["tcu", "transmission", "control", "diagnostics"]
+    
+    endpoints:
+      capabilities: "/transmission/tcu"
+      data_resources: "/transmission/tcu/data"
+      operations: "/transmission/tcu/operations"
+      faults: "/transmission/tcu/faults"
+      modes: "/transmission/tcu/modes"
+      configurations: "/transmission/tcu/configurations"
+      scripts: "/transmission/tcu/scripts"
+      triggers: "/transmission/tcu/triggers"
+      
+    resources:
+      data_resources:
+        - "config/resources/data/tcu_data_resources.yaml"
+      operations:
+        - "config/resources/operations/tcu_operations.yaml"
+      faults:
+        - "config/resources/faults/tcu_faults.yaml"
+      modes:
+        - "config/resources/modes/tcu_modes.yaml"
+      configurations:
+        - "config/resources/configurations/tcu_configurations.yaml"
+        
+  - id: "/camera/front"
+    name: "Front Camera"
+    href: "/camera/front"
+    description: "Front-facing camera system"
+    tags: ["camera", "vision", "adas", "safety"]
+    
+    endpoints:
+      capabilities: "/camera/front"
+      data_resources: "/camera/front/data"
+      operations: "/camera/front/operations"
+      faults: "/camera/front/faults"
+      modes: "/camera/front/modes"
+      configurations: "/camera/front/configurations"
+      scripts: "/camera/front/scripts"
+      triggers: "/camera/front/triggers"
+      
+    resources:
+      data_resources:
+        - "config/resources/data/camera_data_resources.yaml"
+      operations:
+        - "config/resources/operations/camera_operations.yaml"
+      faults:
+        - "config/resources/faults/camera_faults.yaml"
+      modes:
+        - "config/resources/modes/camera_modes.yaml"
+      configurations:
+        - "config/resources/configurations/camera_configurations.yaml"

@@ -1,0 +1,119 @@
+# ECU Operations Configuration
+# Contains operations that can be performed on the Engine Control Unit
+
+operations:
+  - id: "ECU-RESET"
+    name: "ECU Reset"
+    description: "Reset the Engine Control Unit to default state"
+    tags: ["reset", "ecu", "system", "maintenance"]
+    execution:
+      type: "synchronous"
+      timeout: 30
+    response_success:
+      status: "success"
+      message: "ECU reset completed successfully"
+      reset_time: "2024-01-20T14:30:15.123Z"
+    response_error:
+      status: "error"
+      message: "ECU reset failed"
+      error_code: "ECU_RESET_FAILED"
+      
+  - id: "ECU-CALIBRATION-UPDATE"
+    name: "Update Calibration"
+    description: "Update ECU calibration parameters and maps"
+    tags: ["calibration", "update", "ecu", "tuning"]
+    execution:
+      type: "asynchronous"
+      timeout: 300
+    response_success:
+      status: "success"
+      message: "Calibration update initiated"
+      estimated_duration: "5 minutes"
+    response_error:
+      status: "error"
+      message: "Calibration update failed"
+      error_code: "CALIBRATION_UPDATE_FAILED"
+      
+  - id: "ECU-DIAGNOSTIC-SCAN"
+    name: "Diagnostic Scan"
+    description: "Perform comprehensive diagnostic scan of ECU systems"
+    tags: ["diagnostic", "scan", "ecu", "testing"]
+    execution:
+      type: "asynchronous"
+      timeout: 120
+    response_success:
+      status: "success"
+      message: "Diagnostic scan completed"
+      faults_found: 0
+      scan_duration: "2 minutes"
+    response_error:
+      status: "error"
+      message: "Diagnostic scan failed"
+      error_code: "DIAGNOSTIC_SCAN_FAILED"
+      
+  - id: "ECU-MEMORY-CLEAR"
+    name: "Clear Memory"
+    description: "Clear ECU memory and reset learned values"
+    tags: ["memory", "clear", "ecu", "maintenance"]
+    execution:
+      type: "synchronous"
+      timeout: 60
+    response_success:
+      status: "success"
+      message: "Memory cleared successfully"
+      cleared_sections: ["adaptation", "learned_values", "fault_memory"]
+    response_error:
+      status: "error"
+      message: "Memory clear failed"
+      error_code: "MEMORY_CLEAR_FAILED"
+      
+  - id: "ECU-SOFTWARE-UPDATE"
+    name: "Software Update"
+    description: "Update ECU software to latest version"
+    tags: ["software", "update", "ecu", "maintenance"]
+    execution:
+      type: "asynchronous"
+      timeout: 600
+    response_success:
+      status: "success"
+      message: "Software update initiated"
+      new_version: "2024.1.1"
+      estimated_duration: "10 minutes"
+    response_error:
+      status: "error"
+      message: "Software update failed"
+      error_code: "SOFTWARE_UPDATE_FAILED"
+      
+  - id: "ECU-PARAMETER-READ"
+    name: "Read Parameters"
+    description: "Read current ECU parameters and configuration"
+    tags: ["read", "parameters", "ecu", "monitoring"]
+    execution:
+      type: "synchronous"
+      timeout: 30
+    response_success:
+      status: "success"
+      message: "Parameters read successfully"
+      parameter_count: 150
+      read_time: "2024-01-20T14:30:15.123Z"
+    response_error:
+      status: "error"
+      message: "Parameter read failed"
+      error_code: "PARAMETER_READ_FAILED"
+      
+  - id: "ECU-PARAMETER-WRITE"
+    name: "Write Parameters"
+    description: "Write new parameters to ECU configuration"
+    tags: ["write", "parameters", "ecu", "configuration"]
+    execution:
+      type: "synchronous"
+      timeout: 45
+    response_success:
+      status: "success"
+      message: "Parameters written successfully"
+      parameters_updated: 5
+      write_time: "2024-01-20T14:30:15.123Z"
+    response_error:
+      status: "error"
+      message: "Parameter write failed"
+      error_code: "PARAMETER_WRITE_FAILED"

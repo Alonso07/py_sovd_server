@@ -1,0 +1,141 @@
+# Engine Faults Configuration
+# Contains actual fault data for engine-related endpoints
+
+faults:
+  - id: "P0301"
+    name: "Cylinder 1 Misfire"
+    description: "Misfire detected in cylinder 1"
+    severity: 2
+    scope: "engine"
+    status: "active"
+    category: "ignition"
+    groups: ["engine", "ignition", "misfire"]
+    tags: ["misfire", "cylinder1", "ignition", "engine"]
+    
+    # Fault details
+    details:
+      fault_code: "P0301"
+      description: "Cylinder 1 Misfire Detected"
+      severity_level: "warning"
+      occurrence_count: 15
+      first_occurrence: "2024-01-20T10:15:30.123Z"
+      last_occurrence: "2024-01-20T14:25:45.456Z"
+      conditions:
+        engine_rpm: "> 1500"
+        engine_load: "> 50%"
+        coolant_temp: "> 80°C"
+      possible_causes:
+        - "Faulty spark plug"
+        - "Ignition coil failure"
+        - "Fuel injector problem"
+        - "Compression issue"
+      suggested_actions:
+        - "Check spark plug condition"
+        - "Test ignition coil"
+        - "Inspect fuel injector"
+        - "Perform compression test"
+        
+    # JSON schema for fault data
+    schema:
+      type: "object"
+      properties:
+        fault_code:
+          type: "string"
+          description: "OBD fault code"
+        description:
+          type: "string"
+          description: "Fault description"
+        severity_level:
+          type: "string"
+          enum: ["info", "warning", "error", "critical"]
+          description: "Severity level"
+        occurrence_count:
+          type: "integer"
+          minimum: 0
+          description: "Number of occurrences"
+        first_occurrence:
+          type: "string"
+          format: "date-time"
+          description: "First occurrence timestamp"
+        last_occurrence:
+          type: "string"
+          format: "date-time"
+          description: "Last occurrence timestamp"
+        conditions:
+          type: "object"
+          description: "Conditions when fault occurs"
+        possible_causes:
+          type: "array"
+          items:
+            type: "string"
+          description: "Possible causes"
+        suggested_actions:
+          type: "array"
+          items:
+            type: "string"
+          description: "Suggested diagnostic actions"
+      required: ["fault_code", "description", "severity_level", "occurrence_count"]
+      
+  - id: "P0171"
+    name: "System Too Lean (Bank 1)"
+    description: "Fuel system too lean on bank 1"
+    severity: 1
+    scope: "engine"
+    status: "active"
+    category: "fuel"
+    groups: ["engine", "fuel", "emissions"]
+    tags: ["lean", "fuel", "bank1", "emissions"]
+    
+    details:
+      fault_code: "P0171"
+      description: "System Too Lean (Bank 1)"
+      severity_level: "warning"
+      occurrence_count: 8
+      first_occurrence: "2024-01-20T12:30:15.789Z"
+      last_occurrence: "2024-01-20T14:20:30.123Z"
+      conditions:
+        engine_rpm: "> 2000"
+        engine_load: "> 30%"
+        fuel_trim: "> +15%"
+      possible_causes:
+        - "Vacuum leak"
+        - "Faulty MAF sensor"
+        - "Fuel pressure regulator issue"
+        - "Clogged fuel filter"
+      suggested_actions:
+        - "Check for vacuum leaks"
+        - "Test MAF sensor"
+        - "Verify fuel pressure"
+        - "Replace fuel filter"
+        
+  - id: "P0420"
+    name: "Catalyst System Efficiency Below Threshold"
+    description: "Catalytic converter efficiency below threshold"
+    severity: 3
+    scope: "emissions"
+    status: "active"
+    category: "emissions"
+    groups: ["engine", "emissions", "catalyst"]
+    tags: ["catalyst", "emissions", "efficiency", "bank1"]
+    
+    details:
+      fault_code: "P0420"
+      description: "Catalyst System Efficiency Below Threshold (Bank 1)"
+      severity_level: "error"
+      occurrence_count: 3
+      first_occurrence: "2024-01-19T16:45:20.456Z"
+      last_occurrence: "2024-01-20T13:15:10.789Z"
+      conditions:
+        engine_rpm: "> 2500"
+        engine_load: "> 40%"
+        catalyst_temp: "> 400°C"
+      possible_causes:
+        - "Catalytic converter failure"
+        - "Oxygen sensor malfunction"
+        - "Engine running rich"
+        - "Exhaust leak"
+      suggested_actions:
+        - "Test catalytic converter efficiency"
+        - "Check oxygen sensors"
+        - "Verify fuel mixture"
+        - "Inspect exhaust system"
