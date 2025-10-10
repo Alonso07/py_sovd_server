@@ -1,0 +1,3354 @@
+openapi: 3.0.3
+info:
+  contact:
+    name: SOVD API Support
+  description: "This API specification defines the Service-Oriented Vehicle Diagnostics\
+    \ (SOVD) interface \naccording to ISO/DIS 17978-3:2025. The SOVD API provides\
+    \ access to vehicle diagnostics, \nfault handling, data resources, operations,\
+    \ target modes, and configuration management.\n"
+  license:
+    name: ISO/DIS 17978-3:2025
+  title: SOVD (Service-Oriented Vehicle Diagnostics) API
+  version: 1.0.0
+servers:
+- description: SOVD Server
+  url: "https://{sovd-server-host}/{exve-manufacturer-specific}"
+  variables:
+    sovd-server-host:
+      default: localhost
+      description: Host name of the SOVD Server
+    exve-manufacturer-specific:
+      default: ""
+      description: Optional path element to avoid clashes in URIs
+# security:
+# - BearerAuth: []
+# - ApiKeyAuth: []
+paths:
+  /version-info:
+    get:
+      description: Provides information about all supported versions of the SOVD standard
+      operationId: get_version_info
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VersionInfo"
+          description: The request was successful
+      summary: Read all supported versions of the SOVD server
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /{entity-collection}:
+    get:
+      description: Provides the list of contained Entities for each requested Entity
+        collection
+      operationId: get_entities
+      parameters:
+      - description: "Entity collection type (areas, components, apps)"
+        explode: false
+        in: path
+        name: entity-collection
+        required: true
+        schema:
+          enum:
+          - areas
+          - components
+          - apps
+          type: string
+        style: simple
+      - description: Filter by tags
+        explode: true
+        in: query
+        name: tags
+        required: false
+        schema:
+          items:
+            type: string
+          type: array
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EntityCollection"
+          description: The request was successful
+      summary: Query for Entities from an SOVD server
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /{entity-path}:
+    get:
+      description: Returns the capabilities of an Entity
+      operationId: get_entity_capabilities
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Include JSON schema in response
+        explode: true
+        in: query
+        name: include-schema
+        required: false
+        schema:
+          default: false
+          type: boolean
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EntityCapabilities"
+          description: The request was successful
+      summary: Query for capabilities of an Entity
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /{entity-path}/configurations:
+    delete:
+      description: Resets all configuration resources to their default values
+      operationId: reset_all_configurations
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: All configurations reset successfully
+      summary: Reset all configurations to default value
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /{entity-path}/configurations/{configuration-id}:
+    delete:
+      description: Resets a specific configuration resource to its default value
+      operationId: reset_configuration
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Configuration resource identifier
+        explode: false
+        in: path
+        name: configuration-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Configuration reset successfully
+      summary: Reset configuration to default value
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+    get:
+      description: Provides the current value of a specific configuration resource
+      operationId: get_configuration
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Configuration resource identifier
+        explode: false
+        in: path
+        name: configuration-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Include JSON schema in response
+        explode: true
+        in: query
+        name: include-schema
+        required: false
+        schema:
+          default: false
+          type: boolean
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Configuration"
+          description: The request was successful
+      summary: Read a configuration resource
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+    put:
+      description: Updates the value of a specific configuration resource
+      operationId: update_configuration
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Configuration resource identifier
+        explode: false
+        in: path
+        name: configuration-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConfigurationWrite"
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/ConfigurationWriteMultipart"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Configuration"
+          description: Configuration updated successfully
+      summary: Write a configuration resource
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /{entity-path}/cyclic-subscriptions:
+    get:
+      description: Provides the list of cyclic subscriptions for an Entity
+      operationId: get_cyclic_subscriptions
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CyclicSubscriptionCollection"
+          description: The request was successful
+      summary: Query for cyclic-subscriptions from an Entity
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+    post:
+      description: Creates a new cyclic subscription for data monitoring
+      operationId: create_cyclic_subscription
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CyclicSubscriptionCreate"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CyclicSubscription"
+          description: Cyclic subscription created successfully
+          headers:
+            Location:
+              description: URI of the created cyclic subscription
+              explode: false
+              schema:
+                type: string
+              style: simple
+      summary: Issue a new cyclic-subscription
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /{entity-path}/cyclic-subscriptions/{subscription-id}:
+    delete:
+      description: Deletes an existing cyclic subscription
+      operationId: delete_cyclic_subscription
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Cyclic subscription identifier
+        explode: false
+        in: path
+        name: subscription-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Cyclic subscription deleted successfully
+      summary: Delete a cyclic-subscription
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+    get:
+      description: Provides detailed information about a specific cyclic subscription
+      operationId: get_cyclic_subscription
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Cyclic subscription identifier
+        explode: false
+        in: path
+        name: subscription-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CyclicSubscription"
+          description: The request was successful
+      summary: Retrieve details of a cyclic-subscription
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+    put:
+      description: Updates an existing cyclic subscription
+      operationId: update_cyclic_subscription
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Cyclic subscription identifier
+        explode: false
+        in: path
+        name: subscription-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CyclicSubscriptionUpdate"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CyclicSubscription"
+          description: Cyclic subscription updated successfully
+      summary: Update a cyclic-subscription
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /{entity-path}/cyclic-subscriptions/{subscription-id}/events:
+    get:
+      description: Establishes a Server-Sent Event stream for cyclic data reception
+      operationId: get_cyclic_subscription_events
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Cyclic subscription identifier
+        explode: false
+        in: path
+        name: subscription-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            text/event-stream:
+              schema:
+                description: Server-Sent Events stream
+                type: string
+          description: Event stream established
+      summary: Retrieve cyclic subscription events
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /{entity-path}/data:
+    get:
+      description: Provides the list of data resources for an Entity
+      operationId: get_data_resources
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Filter data resources by category
+        explode: true
+        in: query
+        name: category
+        required: false
+        schema:
+          enum:
+          - currentData
+          - historicalData
+          - staticData
+          type: string
+        style: form
+      - description: Filter data resources by groups
+        explode: true
+        in: query
+        name: groups
+        required: false
+        schema:
+          items:
+            type: string
+          type: array
+        style: form
+      - description: Filter by tags
+        explode: true
+        in: query
+        name: tags
+        required: false
+        schema:
+          items:
+            type: string
+          type: array
+        style: form
+      - description: Include JSON schema in response
+        explode: true
+        in: query
+        name: include-schema
+        required: false
+        schema:
+          default: false
+          type: boolean
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataResourceCollection"
+          description: The request was successful
+      summary: Query for data from an Entity
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /{entity-path}/data-lists:
+    get:
+      description: Provides the list of all data-list resources available for an Entity
+      operationId: get_data_lists
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataListCollection"
+          description: The request was successful
+      summary: Query for data-lists from an Entity
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+    post:
+      description: Creates a new data-list resource for reading multiple data values
+      operationId: create_data_list
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DataListCreate"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataList"
+          description: Data-list created successfully
+          headers:
+            Location:
+              description: URI of the created data-list
+              explode: false
+              schema:
+                type: string
+              style: simple
+      summary: Creating a data-list for reading multiple data values at once from
+        an Entity
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /{entity-path}/data-lists/{data-list-id}:
+    delete:
+      description: Deletes an existing data-list resource
+      operationId: delete_data_list
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Data-list identifier
+        explode: false
+        in: path
+        name: data-list-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Data-list deleted successfully
+      summary: Delete an existing data-list
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+    get:
+      description: Provides the current values of all data resources in the data-list
+      operationId: get_data_list
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Data-list identifier
+        explode: false
+        in: path
+        name: data-list-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataList"
+          description: The request was successful
+      summary: Read a data-list resource
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /{entity-path}/data/{data-id}:
+    get:
+      description: Provides the current value of a specific data resource
+      operationId: get_data_resource
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Data resource identifier
+        explode: false
+        in: path
+        name: data-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Include JSON schema in response
+        explode: true
+        in: query
+        name: include-schema
+        required: false
+        schema:
+          default: false
+          type: boolean
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataResource"
+          description: The request was successful
+      summary: Read a data resource
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+    put:
+      description: Updates the value of a specific data resource
+      operationId: update_data_resource
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Data resource identifier
+        explode: false
+        in: path
+        name: data-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DataResourceWrite"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataResource"
+          description: Data resource updated successfully
+      summary: Write a data resource
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /{entity-path}/faults:
+    delete:
+      description: Deletes all fault entries for an Entity
+      operationId: delete_all_faults
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: All faults deleted successfully
+      summary: Delete all faults of an Entity
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+    get:
+      description: Provides the list of fault entries for an Entity
+      operationId: get_faults
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Filter faults by severity level
+        explode: true
+        in: query
+        name: severity
+        required: false
+        schema:
+          maximum: 3
+          minimum: 1
+          type: integer
+        style: form
+      - description: Filter faults by scope
+        explode: true
+        in: query
+        name: scope
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: Filter faults by status
+        explode: true
+        in: query
+        name: status
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: Include JSON schema in response
+        explode: true
+        in: query
+        name: include-schema
+        required: false
+        schema:
+          default: false
+          type: boolean
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FaultCollection"
+          description: The request was successful
+      summary: Query for faults from an Entity
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /{entity-path}/faults/{fault-code}:
+    delete:
+      description: Deletes a specific fault entry
+      operationId: delete_fault
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Fault code identifier
+        explode: false
+        in: path
+        name: fault-code
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Fault deleted successfully
+      summary: Delete single fault of an Entity
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+    get:
+      description: Provides detailed information about a specific fault
+      operationId: get_fault
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Fault code identifier
+        explode: false
+        in: path
+        name: fault-code
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Include JSON schema in response
+        explode: true
+        in: query
+        name: include-schema
+        required: false
+        schema:
+          default: false
+          type: boolean
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Fault"
+          description: The request was successful
+      summary: Read a fault resource
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /{entity-path}/modes:
+    get:
+      description: Provides the list of modes available for an Entity
+      operationId: get_modes
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Include JSON schema in response
+        explode: true
+        in: query
+        name: include-schema
+        required: false
+        schema:
+          default: false
+          type: boolean
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModeCollection"
+          description: The request was successful
+      summary: Query for modes of an Entity
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /{entity-path}/modes/{mode-id}:
+    get:
+      description: Provides detailed information about a specific mode
+      operationId: get_mode
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Mode identifier
+        explode: false
+        in: path
+        name: mode-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Include JSON schema in response
+        explode: true
+        in: query
+        name: include-schema
+        required: false
+        schema:
+          default: false
+          type: boolean
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mode"
+          description: The request was successful
+      summary: Retrieve details of a mode
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+    put:
+      description: Sets the mode of an Entity to a specific value
+      operationId: set_mode
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Mode identifier
+        explode: false
+        in: path
+        name: mode-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModeSet"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mode"
+          description: Mode set successfully
+      summary: Set mode of an Entity
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /{entity-path}/operations:
+    get:
+      description: Provides the list of operations available for an Entity
+      operationId: get_operations
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Include JSON schema in response
+        explode: true
+        in: query
+        name: include-schema
+        required: false
+        schema:
+          default: false
+          type: boolean
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OperationCollection"
+          description: The request was successful
+      summary: Query for operations from an Entity
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /{entity-path}/operations/{operation-id}:
+    get:
+      description: Provides detailed information about a specific operation
+      operationId: get_operation
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Operation identifier
+        explode: false
+        in: path
+        name: operation-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Include JSON schema in response
+        explode: true
+        in: query
+        name: include-schema
+        required: false
+        schema:
+          default: false
+          type: boolean
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Operation"
+          description: The request was successful
+      summary: Retrieve details of an operation
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /{entity-path}/operations/{operation-id}/executions:
+    get:
+      description: Provides the list of executions for a specific operation
+      operationId: get_operation_executions
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Operation identifier
+        explode: false
+        in: path
+        name: operation-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExecutionCollection"
+          description: The request was successful
+      summary: Query for executions of an operation
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+    post:
+      description: Starts execution of a specific operation
+      operationId: start_operation_execution
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Operation identifier
+        explode: false
+        in: path
+        name: operation-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OperationExecutionRequest"
+        required: true
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OperationExecution"
+          description: Operation execution started
+          headers:
+            Location:
+              description: URI of the operation execution
+              explode: false
+              schema:
+                type: string
+              style: simple
+      summary: Start execution of an operation
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /{entity-path}/operations/{operation-id}/executions/{execution-id}:
+    delete:
+      description: Terminates a running operation execution
+      operationId: terminate_operation_execution
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Operation identifier
+        explode: false
+        in: path
+        name: operation-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Operation execution identifier
+        explode: false
+        in: path
+        name: execution-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Operation execution terminated successfully
+      summary: Terminate the execution of an operation
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+    get:
+      description: Provides the current status of a specific operation execution
+      operationId: get_operation_execution_status
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Operation identifier
+        explode: false
+        in: path
+        name: operation-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Operation execution identifier
+        explode: false
+        in: path
+        name: execution-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OperationExecution"
+          description: The request was successful
+      summary: Read the status of an operation execution
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+    put:
+      description: "Modifies the execution of an operation (freeze, reset, etc.)"
+      operationId: modify_operation_execution
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Operation identifier
+        explode: false
+        in: path
+        name: operation-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Operation execution identifier
+        explode: false
+        in: path
+        name: execution-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OperationExecutionModify"
+        required: true
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OperationExecution"
+          description: Operation execution modified
+          headers:
+            Location:
+              description: URI of the operation execution
+              explode: false
+              schema:
+                type: string
+              style: simple
+      summary: Support for execute / freeze / reset and custom capabilities
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /{entity-path}/scripts:
+    get:
+      description: Provides the list of scripts available for an Entity
+      operationId: get_scripts
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScriptCollection"
+          description: The request was successful
+      summary: Query for scripts from an Entity
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+    post:
+      description: Uploads a new script to an Entity
+      operationId: upload_script
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/ScriptUpload"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Script"
+          description: Script uploaded successfully
+          headers:
+            Location:
+              description: URI of the uploaded script
+              explode: false
+              schema:
+                type: string
+              style: simple
+      summary: Upload a script
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /{entity-path}/scripts/{script-id}:
+    delete:
+      description: Removes a script from an Entity
+      operationId: remove_script
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Script identifier
+        explode: false
+        in: path
+        name: script-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Script removed successfully
+      summary: Remove a script
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+    get:
+      description: Provides detailed information about a specific script
+      operationId: get_script
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Script identifier
+        explode: false
+        in: path
+        name: script-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Script"
+          description: The request was successful
+      summary: Retrieve details of a script
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /{entity-path}/scripts/{script-id}/executions:
+    get:
+      description: Provides the list of executions for a specific script
+      operationId: get_script_executions
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Script identifier
+        explode: false
+        in: path
+        name: script-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScriptExecutionCollection"
+          description: The request was successful
+      summary: Query for executions of a Script
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+    post:
+      description: Starts execution of a specific script
+      operationId: start_script_execution
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Script identifier
+        explode: false
+        in: path
+        name: script-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScriptExecutionRequest"
+        required: true
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScriptExecution"
+          description: Script execution started
+          headers:
+            Location:
+              description: URI of the script execution
+              explode: false
+              schema:
+                type: string
+              style: simple
+      summary: Start execution of a script
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /{entity-path}/scripts/{script-id}/executions/{execution-id}:
+    delete:
+      description: Terminates a running script execution
+      operationId: terminate_script_execution
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Script identifier
+        explode: false
+        in: path
+        name: script-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Operation execution identifier
+        explode: false
+        in: path
+        name: execution-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Script execution terminated successfully
+      summary: Terminate the script execution
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+    get:
+      description: Provides the current status of a specific script execution
+      operationId: get_script_execution_status
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Script identifier
+        explode: false
+        in: path
+        name: script-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Operation execution identifier
+        explode: false
+        in: path
+        name: execution-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScriptExecution"
+          description: The request was successful
+      summary: Read the status of a script execution
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /{entity-path}/triggers:
+    get:
+      description: Provides the list of triggers for an Entity
+      operationId: get_triggers
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TriggerCollection"
+          description: The request was successful
+      summary: Query for triggers from an Entity
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+    post:
+      description: Creates a new trigger for event-based data reception
+      operationId: create_trigger
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TriggerCreate"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trigger"
+          description: Trigger created successfully
+          headers:
+            Location:
+              description: URI of the created trigger
+              explode: false
+              schema:
+                type: string
+              style: simple
+      summary: Issue a new trigger
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /{entity-path}/triggers/{trigger-id}:
+    delete:
+      description: Deletes an existing trigger
+      operationId: delete_trigger
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Trigger identifier
+        explode: false
+        in: path
+        name: trigger-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Trigger deleted successfully
+      summary: Delete a trigger
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+    get:
+      description: Provides detailed information about a specific trigger
+      operationId: get_trigger
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Trigger identifier
+        explode: false
+        in: path
+        name: trigger-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trigger"
+          description: The request was successful
+      summary: Retrieve details of a trigger
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+    put:
+      description: Updates an existing trigger
+      operationId: update_trigger
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Trigger identifier
+        explode: false
+        in: path
+        name: trigger-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TriggerUpdate"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trigger"
+          description: Trigger updated successfully
+      summary: Update a trigger
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /{entity-path}/triggers/{trigger-id}/events:
+    get:
+      description: Establishes a Server-Sent Event stream for trigger-based data reception
+      operationId: get_trigger_events
+      parameters:
+      - description: Path to the Entity
+        explode: false
+        in: path
+        name: entity-path
+        required: true
+        schema:
+          pattern: "^(areas|components|apps)/[^/]+"
+          type: string
+        style: simple
+      - description: Trigger identifier
+        explode: false
+        in: path
+        name: trigger-id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            text/event-stream:
+              schema:
+                description: Server-Sent Events stream
+                type: string
+          description: Event stream established
+      summary: Retrieve trigger events
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+components:
+  parameters:
+    EntityCollection:
+      description: "Entity collection type (areas, components, apps)"
+      explode: false
+      in: path
+      name: entity-collection
+      required: true
+      schema:
+        enum:
+        - areas
+        - components
+        - apps
+        type: string
+      style: simple
+    EntityPath:
+      description: Path to the Entity
+      explode: false
+      in: path
+      name: entity-path
+      required: true
+      schema:
+        pattern: "^(areas|components|apps)/[^/]+"
+        type: string
+      style: simple
+    FaultCode:
+      description: Fault code identifier
+      explode: false
+      in: path
+      name: fault-code
+      required: true
+      schema:
+        type: string
+      style: simple
+    DataId:
+      description: Data resource identifier
+      explode: false
+      in: path
+      name: data-id
+      required: true
+      schema:
+        type: string
+      style: simple
+    DataListId:
+      description: Data-list identifier
+      explode: false
+      in: path
+      name: data-list-id
+      required: true
+      schema:
+        type: string
+      style: simple
+    OperationId:
+      description: Operation identifier
+      explode: false
+      in: path
+      name: operation-id
+      required: true
+      schema:
+        type: string
+      style: simple
+    ExecutionId:
+      description: Operation execution identifier
+      explode: false
+      in: path
+      name: execution-id
+      required: true
+      schema:
+        type: string
+      style: simple
+    ModeId:
+      description: Mode identifier
+      explode: false
+      in: path
+      name: mode-id
+      required: true
+      schema:
+        type: string
+      style: simple
+    ConfigurationId:
+      description: Configuration resource identifier
+      explode: false
+      in: path
+      name: configuration-id
+      required: true
+      schema:
+        type: string
+      style: simple
+    SubscriptionId:
+      description: Cyclic subscription identifier
+      explode: false
+      in: path
+      name: subscription-id
+      required: true
+      schema:
+        type: string
+      style: simple
+    TriggerId:
+      description: Trigger identifier
+      explode: false
+      in: path
+      name: trigger-id
+      required: true
+      schema:
+        type: string
+      style: simple
+    ScriptId:
+      description: Script identifier
+      explode: false
+      in: path
+      name: script-id
+      required: true
+      schema:
+        type: string
+      style: simple
+    Tags:
+      description: Filter by tags
+      explode: true
+      in: query
+      name: tags
+      required: false
+      schema:
+        items:
+          type: string
+        type: array
+      style: form
+    Severity:
+      description: Filter faults by severity level
+      explode: true
+      in: query
+      name: severity
+      required: false
+      schema:
+        maximum: 3
+        minimum: 1
+        type: integer
+      style: form
+    Scope:
+      description: Filter faults by scope
+      explode: true
+      in: query
+      name: scope
+      required: false
+      schema:
+        type: string
+      style: form
+    Status:
+      description: Filter faults by status
+      explode: true
+      in: query
+      name: status
+      required: false
+      schema:
+        type: string
+      style: form
+    Category:
+      description: Filter data resources by category
+      explode: true
+      in: query
+      name: category
+      required: false
+      schema:
+        enum:
+        - currentData
+        - historicalData
+        - staticData
+        type: string
+      style: form
+    Groups:
+      description: Filter data resources by groups
+      explode: true
+      in: query
+      name: groups
+      required: false
+      schema:
+        items:
+          type: string
+        type: array
+      style: form
+    IncludeSchema:
+      description: Include JSON schema in response
+      explode: true
+      in: query
+      name: include-schema
+      required: false
+      schema:
+        default: false
+        type: boolean
+      style: form
+  responses:
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+      description: Bad Request
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+      description: Unauthorized
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+      description: Forbidden
+    NotFound:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+      description: Not Found
+    InternalServerError:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+      description: Internal Server Error
+  schemas:
+    VersionInfo:
+      example:
+        versions:
+        - accessurl: https://openapi-generator.tech
+          version: version
+          status: stable
+        - accessurl: https://openapi-generator.tech
+          version: version
+          status: stable
+      properties:
+        versions:
+          items:
+            $ref: "#/components/schemas/Version"
+          title: versions
+          type: array
+      required:
+      - versions
+      title: VersionInfo
+      type: object
+    Version:
+      example:
+        accessurl: https://openapi-generator.tech
+        version: version
+        status: stable
+      properties:
+        version:
+          description: Version identifier
+          title: version
+          type: string
+        status:
+          description: Version status
+          enum:
+          - stable
+          - draft
+          - deprecated
+          title: status
+          type: string
+        accessurl:
+          description: Access URL for this version
+          format: uri
+          title: accessurl
+          type: string
+      required:
+      - status
+      - version
+      title: Version
+      type: object
+    EntityCollection:
+      example:
+        items:
+        - name: name
+          id: id
+          href: https://openapi-generator.tech
+          tags:
+          - tags
+          - tags
+        - name: name
+          id: id
+          href: https://openapi-generator.tech
+          tags:
+          - tags
+          - tags
+      properties:
+        items:
+          items:
+            $ref: "#/components/schemas/EntityReference"
+          title: items
+          type: array
+      required:
+      - items
+      title: EntityCollection
+      type: object
+    EntityReference:
+      example:
+        name: name
+        id: id
+        href: https://openapi-generator.tech
+        tags:
+        - tags
+        - tags
+      properties:
+        id:
+          description: Entity identifier
+          title: id
+          type: string
+        name:
+          description: Entity name
+          title: name
+          type: string
+        href:
+          description: Entity URI
+          format: uri
+          title: href
+          type: string
+        tags:
+          description: Entity tags
+          items:
+            type: string
+          title: tags
+          type: array
+      required:
+      - href
+      - id
+      - name
+      title: EntityReference
+      type: object
+    EntityCapabilities:
+      example:
+        operations: https://openapi-generator.tech
+        modes: https://openapi-generator.tech
+        data: https://openapi-generator.tech
+        configurations: https://openapi-generator.tech
+        name: name
+        id: id
+        faults: https://openapi-generator.tech
+        tags:
+        - tags
+        - tags
+      properties:
+        id:
+          description: Entity identifier
+          title: id
+          type: string
+        name:
+          description: Entity name
+          title: name
+          type: string
+        tags:
+          items:
+            type: string
+          title: tags
+          type: array
+        data:
+          description: Data resources URI
+          format: uri
+          title: data
+          type: string
+        faults:
+          description: Faults URI
+          format: uri
+          title: faults
+          type: string
+        operations:
+          description: Operations URI
+          format: uri
+          title: operations
+          type: string
+        configurations:
+          description: Configurations URI
+          format: uri
+          title: configurations
+          type: string
+        modes:
+          description: Modes URI
+          format: uri
+          title: modes
+          type: string
+      title: EntityCapabilities
+      type: object
+    FaultCollection:
+      example:
+        items:
+        - severity: 1
+          code: code
+          fault_name: fault_name
+          display_code: display_code
+          fault_translation_id: fault_translation_id
+          scope: scope
+          status:
+            pendingDTC: "0"
+            testFailed: "0"
+            testNotCompletedThisOperationCycle: "0"
+            warningIndicatorRequested: "0"
+            confirmedDTC: "0"
+            testNotCompletedSinceLastClear: "0"
+            testFailedThisOperationCycle: "0"
+            aggregatedStatus: active
+            testFailedSinceLastClear: "0"
+            mask: mask
+        - severity: 1
+          code: code
+          fault_name: fault_name
+          display_code: display_code
+          fault_translation_id: fault_translation_id
+          scope: scope
+          status:
+            pendingDTC: "0"
+            testFailed: "0"
+            testNotCompletedThisOperationCycle: "0"
+            warningIndicatorRequested: "0"
+            confirmedDTC: "0"
+            testNotCompletedSinceLastClear: "0"
+            testFailedThisOperationCycle: "0"
+            aggregatedStatus: active
+            testFailedSinceLastClear: "0"
+            mask: mask
+      properties:
+        items:
+          items:
+            $ref: "#/components/schemas/FaultReference"
+          title: items
+          type: array
+      required:
+      - items
+      title: FaultCollection
+      type: object
+    FaultReference:
+      example:
+        severity: 1
+        code: code
+        fault_name: fault_name
+        display_code: display_code
+        fault_translation_id: fault_translation_id
+        scope: scope
+        status:
+          pendingDTC: "0"
+          testFailed: "0"
+          testNotCompletedThisOperationCycle: "0"
+          warningIndicatorRequested: "0"
+          confirmedDTC: "0"
+          testNotCompletedSinceLastClear: "0"
+          testFailedThisOperationCycle: "0"
+          aggregatedStatus: active
+          testFailedSinceLastClear: "0"
+          mask: mask
+      properties:
+        code:
+          description: Fault code
+          title: code
+          type: string
+        scope:
+          description: Fault scope
+          title: scope
+          type: string
+        display_code:
+          description: Display code
+          title: display_code
+          type: string
+        fault_name:
+          description: Fault name
+          title: fault_name
+          type: string
+        fault_translation_id:
+          description: Translation ID
+          title: fault_translation_id
+          type: string
+        severity:
+          description: Severity level
+          maximum: 3
+          minimum: 1
+          title: severity
+          type: integer
+        status:
+          $ref: "#/components/schemas/FaultStatus"
+      required:
+      - code
+      - fault_name
+      - scope
+      - severity
+      - status
+      title: FaultReference
+      type: object
+    Fault:
+      example:
+        item:
+          severity: 1
+          code: code
+          fault_name: fault_name
+          display_code: display_code
+          fault_translation_id: fault_translation_id
+          scope: scope
+          status:
+            pendingDTC: "0"
+            testFailed: "0"
+            testNotCompletedThisOperationCycle: "0"
+            warningIndicatorRequested: "0"
+            confirmedDTC: "0"
+            testNotCompletedSinceLastClear: "0"
+            testFailedThisOperationCycle: "0"
+            aggregatedStatus: active
+            testFailedSinceLastClear: "0"
+            mask: mask
+        environment_data:
+          snapshots:
+          - data: 0.8008281904610115
+            name: name
+          - data: 0.8008281904610115
+            name: name
+          extended_data_records:
+            last_occurence: 2000-01-23T04:56:07.000+00:00
+            first_occurence: 2000-01-23T04:56:07.000+00:00
+      properties:
+        item:
+          $ref: "#/components/schemas/FaultReference"
+        environment_data:
+          $ref: "#/components/schemas/EnvironmentData"
+      required:
+      - environment_data
+      - item
+      title: Fault
+      type: object
+    FaultStatus:
+      example:
+        pendingDTC: "0"
+        testFailed: "0"
+        testNotCompletedThisOperationCycle: "0"
+        warningIndicatorRequested: "0"
+        confirmedDTC: "0"
+        testNotCompletedSinceLastClear: "0"
+        testFailedThisOperationCycle: "0"
+        aggregatedStatus: active
+        testFailedSinceLastClear: "0"
+        mask: mask
+      properties:
+        testFailed:
+          enum:
+          - "0"
+          - "1"
+          title: testFailed
+          type: string
+        testFailedThisOperationCycle:
+          enum:
+          - "0"
+          - "1"
+          title: testFailedThisOperationCycle
+          type: string
+        pendingDTC:
+          enum:
+          - "0"
+          - "1"
+          title: pendingDTC
+          type: string
+        confirmedDTC:
+          enum:
+          - "0"
+          - "1"
+          title: confirmedDTC
+          type: string
+        testNotCompletedSinceLastClear:
+          enum:
+          - "0"
+          - "1"
+          title: testNotCompletedSinceLastClear
+          type: string
+        testFailedSinceLastClear:
+          enum:
+          - "0"
+          - "1"
+          title: testFailedSinceLastClear
+          type: string
+        testNotCompletedThisOperationCycle:
+          enum:
+          - "0"
+          - "1"
+          title: testNotCompletedThisOperationCycle
+          type: string
+        warningIndicatorRequested:
+          enum:
+          - "0"
+          - "1"
+          title: warningIndicatorRequested
+          type: string
+        mask:
+          title: mask
+          type: string
+        aggregatedStatus:
+          enum:
+          - active
+          - inactive
+          - pending
+          title: aggregatedStatus
+          type: string
+      required:
+      - aggregatedStatus
+      title: FaultStatus
+      type: object
+    EnvironmentData:
+      example:
+        snapshots:
+        - data: 0.8008281904610115
+          name: name
+        - data: 0.8008281904610115
+          name: name
+        extended_data_records:
+          last_occurence: 2000-01-23T04:56:07.000+00:00
+          first_occurence: 2000-01-23T04:56:07.000+00:00
+      properties:
+        extended_data_records:
+          $ref: "#/components/schemas/ExtendedDataRecords"
+        snapshots:
+          items:
+            $ref: "#/components/schemas/Snapshot"
+          title: snapshots
+          type: array
+      title: EnvironmentData
+      type: object
+    ExtendedDataRecords:
+      example:
+        last_occurence: 2000-01-23T04:56:07.000+00:00
+        first_occurence: 2000-01-23T04:56:07.000+00:00
+      properties:
+        first_occurence:
+          format: date-time
+          title: first_occurence
+          type: string
+        last_occurence:
+          format: date-time
+          title: last_occurence
+          type: string
+      title: ExtendedDataRecords
+      type: object
+    Snapshot:
+      example:
+        data: 0.8008281904610115
+        name: name
+      properties:
+        name:
+          title: name
+          type: string
+        data:
+          $ref: "#/components/schemas/Snapshot_data"
+      required:
+      - data
+      - name
+      title: Snapshot
+      type: object
+    DataResourceCollection:
+      example:
+        items:
+        - name: name
+          groups:
+          - groups
+          - groups
+          id: id
+          category: currentData
+          tags:
+          - tags
+          - tags
+        - name: name
+          groups:
+          - groups
+          - groups
+          id: id
+          category: currentData
+          tags:
+          - tags
+          - tags
+      properties:
+        items:
+          items:
+            $ref: "#/components/schemas/DataResourceReference"
+          title: items
+          type: array
+      required:
+      - items
+      title: DataResourceCollection
+      type: object
+    DataResourceReference:
+      example:
+        name: name
+        groups:
+        - groups
+        - groups
+        id: id
+        category: currentData
+        tags:
+        - tags
+        - tags
+      properties:
+        id:
+          description: Data resource identifier
+          title: id
+          type: string
+        name:
+          description: Data resource name
+          title: name
+          type: string
+        category:
+          enum:
+          - currentData
+          - historicalData
+          - staticData
+          title: category
+          type: string
+        groups:
+          items:
+            type: string
+          title: groups
+          type: array
+        tags:
+          items:
+            type: string
+          title: tags
+          type: array
+      required:
+      - category
+      - id
+      - name
+      title: DataResourceReference
+      type: object
+    DataResource:
+      example:
+        schema: "{}"
+        data: "{}"
+        name: name
+        id: id
+        tags:
+        - tags
+        - tags
+      properties:
+        id:
+          title: id
+          type: string
+        name:
+          title: name
+          type: string
+        data:
+          description: Data value
+          title: data
+          type: object
+        schema:
+          description: JSON schema for the data
+          title: schema
+          type: object
+        tags:
+          items:
+            type: string
+          title: tags
+          type: array
+      required:
+      - data
+      - id
+      title: DataResource
+      type: object
+    DataResourceWrite:
+      example:
+        data: "{}"
+      properties:
+        data:
+          description: Data value to write
+          title: data
+          type: object
+      required:
+      - data
+      title: DataResourceWrite
+      type: object
+    DataListCollection:
+      example:
+        items:
+        - id: id
+        - id: id
+      properties:
+        items:
+          items:
+            $ref: "#/components/schemas/DataListReference"
+          title: items
+          type: array
+      required:
+      - items
+      title: DataListCollection
+      type: object
+    DataListReference:
+      example:
+        id: id
+      properties:
+        id:
+          description: Data-list identifier
+          title: id
+          type: string
+      required:
+      - id
+      title: DataListReference
+      type: object
+    DataList:
+      example:
+        id: id
+        items:
+        - schema: "{}"
+          data: "{}"
+          name: name
+          id: id
+          tags:
+          - tags
+          - tags
+        - schema: "{}"
+          data: "{}"
+          name: name
+          id: id
+          tags:
+          - tags
+          - tags
+      properties:
+        id:
+          title: id
+          type: string
+        items:
+          items:
+            $ref: "#/components/schemas/DataResource"
+          title: items
+          type: array
+      required:
+      - id
+      - items
+      title: DataList
+      type: object
+    DataListCreate:
+      example:
+        ids:
+        - ids
+        - ids
+      properties:
+        ids:
+          description: List of data resource IDs to include
+          items:
+            type: string
+          title: ids
+          type: array
+      required:
+      - ids
+      title: DataListCreate
+      type: object
+    OperationCollection:
+      example:
+        items:
+        - name: name
+          id: id
+        - name: name
+          id: id
+      properties:
+        items:
+          items:
+            $ref: "#/components/schemas/OperationReference"
+          title: items
+          type: array
+      required:
+      - items
+      title: OperationCollection
+      type: object
+    OperationReference:
+      example:
+        name: name
+        id: id
+      properties:
+        id:
+          description: Operation identifier
+          title: id
+          type: string
+        name:
+          description: Operation name
+          title: name
+          type: string
+      required:
+      - id
+      - name
+      title: OperationReference
+      type: object
+    Operation:
+      example:
+        capabilities:
+        - capabilities
+        - capabilities
+        name: name
+        description: description
+        id: id
+        parameters: "{}"
+      properties:
+        id:
+          title: id
+          type: string
+        name:
+          title: name
+          type: string
+        description:
+          title: description
+          type: string
+        parameters:
+          description: Operation parameters schema
+          title: parameters
+          type: object
+        capabilities:
+          description: Supported capabilities
+          items:
+            type: string
+          title: capabilities
+          type: array
+      required:
+      - id
+      - name
+      title: Operation
+      type: object
+    ExecutionCollection:
+      example:
+        items:
+        - id: id
+        - id: id
+      properties:
+        items:
+          items:
+            $ref: "#/components/schemas/ExecutionReference"
+          title: items
+          type: array
+      required:
+      - items
+      title: ExecutionCollection
+      type: object
+    ExecutionReference:
+      example:
+        id: id
+      properties:
+        id:
+          description: Execution identifier
+          title: id
+          type: string
+      required:
+      - id
+      title: ExecutionReference
+      type: object
+    OperationExecution:
+      example:
+        result: "{}"
+        id: id
+        error: "{}"
+        parameters: "{}"
+        status: running
+      properties:
+        id:
+          title: id
+          type: string
+        status:
+          enum:
+          - running
+          - completed
+          - failed
+          - terminated
+          title: status
+          type: string
+        parameters:
+          description: Execution parameters
+          title: parameters
+          type: object
+        result:
+          description: Execution result
+          title: result
+          type: object
+        error:
+          description: Error information
+          title: error
+          type: object
+      required:
+      - id
+      - status
+      title: OperationExecution
+      type: object
+    OperationExecutionRequest:
+      example:
+        parameters: "{}"
+        timeout: 0
+      properties:
+        timeout:
+          description: Execution timeout in seconds
+          title: timeout
+          type: integer
+        parameters:
+          description: Operation parameters
+          title: parameters
+          type: object
+      title: OperationExecutionRequest
+      type: object
+    OperationExecutionModify:
+      example:
+        capability: freeze
+        timeout: 0
+      properties:
+        capability:
+          enum:
+          - freeze
+          - reset
+          - execute
+          title: capability
+          type: string
+        timeout:
+          description: New timeout value
+          title: timeout
+          type: integer
+      required:
+      - capability
+      title: OperationExecutionModify
+      type: object
+    ModeCollection:
+      example:
+        items:
+        - name: name
+          id: id
+        - name: name
+          id: id
+      properties:
+        items:
+          items:
+            $ref: "#/components/schemas/ModeReference"
+          title: items
+          type: array
+      required:
+      - items
+      title: ModeCollection
+      type: object
+    ModeReference:
+      example:
+        name: name
+        id: id
+      properties:
+        id:
+          description: Mode identifier
+          title: id
+          type: string
+        name:
+          description: Mode name
+          title: name
+          type: string
+      required:
+      - id
+      - name
+      title: ModeReference
+      type: object
+    Mode:
+      example:
+        schema: "{}"
+        name: name
+        description: description
+        id: id
+        value: value
+      properties:
+        id:
+          title: id
+          type: string
+        name:
+          title: name
+          type: string
+        value:
+          title: value
+          type: string
+        description:
+          title: description
+          type: string
+        schema:
+          description: JSON schema for mode values
+          title: schema
+          type: object
+      required:
+      - id
+      - name
+      - value
+      title: Mode
+      type: object
+    ModeSet:
+      example:
+        mode_expiration: 0
+        value: value
+      properties:
+        value:
+          description: Mode value to set
+          title: value
+          type: string
+        mode_expiration:
+          description: Mode expiration time in seconds
+          title: mode_expiration
+          type: integer
+      required:
+      - value
+      title: ModeSet
+      type: object
+    ConfigurationCollection:
+      properties:
+        items:
+          items:
+            $ref: "#/components/schemas/ConfigurationReference"
+          type: array
+      required:
+      - items
+      type: object
+    ConfigurationReference:
+      properties:
+        id:
+          description: Configuration identifier
+          title: id
+          type: string
+        name:
+          description: Configuration name
+          title: name
+          type: string
+      required:
+      - id
+      - name
+      title: ConfigurationReference
+      type: object
+    Configuration:
+      example:
+        schema: "{}"
+        data: "{}"
+        name: name
+        id: id
+      properties:
+        id:
+          title: id
+          type: string
+        name:
+          title: name
+          type: string
+        data:
+          description: Configuration data
+          title: data
+          type: object
+        schema:
+          description: JSON schema for configuration data
+          title: schema
+          type: object
+      required:
+      - data
+      - id
+      title: Configuration
+      type: object
+    ConfigurationWrite:
+      example:
+        data: "{}"
+        signature: signature
+      properties:
+        data:
+          description: Configuration data to write
+          title: data
+          type: object
+        signature:
+          description: Data signature for verification
+          title: signature
+          type: string
+      required:
+      - data
+      title: ConfigurationWrite
+      type: object
+    ConfigurationWriteMultipart:
+      properties:
+        data:
+          description: Configuration data file
+          format: binary
+          title: data
+          type: string
+        signature:
+          description: Data signature for verification
+          title: signature
+          type: string
+      title: ConfigurationWriteMultipart
+      type: object
+    CyclicSubscriptionCollection:
+      example:
+        items:
+        - protocol: sse
+          resource: https://openapi-generator.tech
+          id: id
+          subscription: https://openapi-generator.tech
+        - protocol: sse
+          resource: https://openapi-generator.tech
+          id: id
+          subscription: https://openapi-generator.tech
+      properties:
+        items:
+          items:
+            $ref: "#/components/schemas/CyclicSubscriptionReference"
+          title: items
+          type: array
+      required:
+      - items
+      title: CyclicSubscriptionCollection
+      type: object
+    CyclicSubscriptionReference:
+      example:
+        protocol: sse
+        resource: https://openapi-generator.tech
+        id: id
+        subscription: https://openapi-generator.tech
+      properties:
+        id:
+          description: Subscription identifier
+          title: id
+          type: string
+        resource:
+          description: Monitored resource URI
+          format: uri
+          title: resource
+          type: string
+        subscription:
+          description: Subscription URI
+          format: uri
+          title: subscription
+          type: string
+        protocol:
+          description: Event protocol
+          enum:
+          - sse
+          title: protocol
+          type: string
+      required:
+      - id
+      - protocol
+      - resource
+      - subscription
+      title: CyclicSubscriptionReference
+      type: object
+    CyclicSubscription:
+      example:
+        protocol: sse
+        expires: 2000-01-23T04:56:07.000+00:00
+        observed_resource: https://openapi-generator.tech
+        event_source: https://openapi-generator.tech
+        interval: slow
+        id: id
+      properties:
+        id:
+          title: id
+          type: string
+        observed_resource:
+          format: uri
+          title: observed_resource
+          type: string
+        event_source:
+          format: uri
+          title: event_source
+          type: string
+        protocol:
+          enum:
+          - sse
+          title: protocol
+          type: string
+        interval:
+          enum:
+          - slow
+          - medium
+          - fast
+          title: interval
+          type: string
+        expires:
+          format: date-time
+          title: expires
+          type: string
+      required:
+      - event_source
+      - id
+      - observed_resource
+      - protocol
+      title: CyclicSubscription
+      type: object
+    CyclicSubscriptionCreate:
+      example:
+        duration: 0
+        protocol: sse
+        resource: https://openapi-generator.tech
+        interval: medium
+      properties:
+        resource:
+          description: Resource to monitor
+          format: uri
+          title: resource
+          type: string
+        protocol:
+          enum:
+          - sse
+          title: protocol
+          type: string
+        interval:
+          default: medium
+          enum:
+          - slow
+          - medium
+          - fast
+          title: interval
+          type: string
+        duration:
+          description: Subscription duration in seconds
+          title: duration
+          type: integer
+      required:
+      - protocol
+      - resource
+      title: CyclicSubscriptionCreate
+      type: object
+    CyclicSubscriptionUpdate:
+      example:
+        duration: 0
+        interval: slow
+      properties:
+        interval:
+          enum:
+          - slow
+          - medium
+          - fast
+          title: interval
+          type: string
+        duration:
+          description: Subscription duration in seconds
+          title: duration
+          type: integer
+      title: CyclicSubscriptionUpdate
+      type: object
+    TriggerCollection:
+      example:
+        items:
+        - protocol: sse
+          resource: https://openapi-generator.tech
+          id: id
+          trigger: https://openapi-generator.tech
+        - protocol: sse
+          resource: https://openapi-generator.tech
+          id: id
+          trigger: https://openapi-generator.tech
+      properties:
+        items:
+          items:
+            $ref: "#/components/schemas/TriggerReference"
+          title: items
+          type: array
+      required:
+      - items
+      title: TriggerCollection
+      type: object
+    TriggerReference:
+      example:
+        protocol: sse
+        resource: https://openapi-generator.tech
+        id: id
+        trigger: https://openapi-generator.tech
+      properties:
+        id:
+          description: Trigger identifier
+          title: id
+          type: string
+        resource:
+          description: Monitored resource URI
+          format: uri
+          title: resource
+          type: string
+        trigger:
+          description: Trigger URI
+          format: uri
+          title: trigger
+          type: string
+        protocol:
+          description: Event protocol
+          enum:
+          - sse
+          title: protocol
+          type: string
+      required:
+      - id
+      - protocol
+      - resource
+      - trigger
+      title: TriggerReference
+      type: object
+    Trigger:
+      example:
+        protocol: sse
+        condition:
+          values:
+          - TriggerCondition_values_inner
+          - TriggerCondition_values_inner
+          match: equals
+          source: source
+        observed_resource: https://openapi-generator.tech
+        lifetime: 0
+        event_source: https://openapi-generator.tech
+        id: id
+      properties:
+        id:
+          title: id
+          type: string
+        observed_resource:
+          format: uri
+          title: observed_resource
+          type: string
+        event_source:
+          format: uri
+          title: event_source
+          type: string
+        protocol:
+          enum:
+          - sse
+          title: protocol
+          type: string
+        condition:
+          $ref: "#/components/schemas/TriggerCondition"
+        lifetime:
+          description: Trigger lifetime in seconds
+          title: lifetime
+          type: integer
+      required:
+      - condition
+      - event_source
+      - id
+      - observed_resource
+      - protocol
+      title: Trigger
+      type: object
+    TriggerCondition:
+      example:
+        values:
+        - TriggerCondition_values_inner
+        - TriggerCondition_values_inner
+        match: equals
+        source: source
+      properties:
+        source:
+          description: Source to monitor
+          format: uri-reference
+          title: source
+          type: string
+        match:
+          default: equals
+          enum:
+          - equals
+          - not_equals
+          - greater_than
+          - less_than
+          - contains
+          title: match
+          type: string
+        values:
+          items:
+            $ref: "#/components/schemas/TriggerCondition_values_inner"
+          title: values
+          type: array
+      required:
+      - match
+      - source
+      - values
+      title: TriggerCondition
+      type: object
+    TriggerCreate:
+      example:
+        protocol: sse
+        condition:
+          values:
+          - TriggerCondition_values_inner
+          - TriggerCondition_values_inner
+          match: equals
+          source: source
+        resource: https://openapi-generator.tech
+        lifetime: 0
+      properties:
+        resource:
+          description: Resource to monitor
+          format: uri
+          title: resource
+          type: string
+        protocol:
+          enum:
+          - sse
+          title: protocol
+          type: string
+        condition:
+          $ref: "#/components/schemas/TriggerCondition"
+        lifetime:
+          description: Trigger lifetime in seconds
+          title: lifetime
+          type: integer
+      required:
+      - condition
+      - protocol
+      - resource
+      title: TriggerCreate
+      type: object
+    TriggerUpdate:
+      example:
+        condition:
+          values:
+          - TriggerCondition_values_inner
+          - TriggerCondition_values_inner
+          match: equals
+          source: source
+        lifetime: 0
+      properties:
+        condition:
+          $ref: "#/components/schemas/TriggerCondition"
+        lifetime:
+          description: Trigger lifetime in seconds
+          title: lifetime
+          type: integer
+      title: TriggerUpdate
+      type: object
+    ScriptCollection:
+      example:
+        items:
+        - name: name
+          id: id
+        - name: name
+          id: id
+      properties:
+        items:
+          items:
+            $ref: "#/components/schemas/ScriptReference"
+          title: items
+          type: array
+      required:
+      - items
+      title: ScriptCollection
+      type: object
+    ScriptReference:
+      example:
+        name: name
+        id: id
+      properties:
+        id:
+          description: Script identifier
+          title: id
+          type: string
+        name:
+          description: Script name
+          title: name
+          type: string
+      required:
+      - id
+      - name
+      title: ScriptReference
+      type: object
+    Script:
+      example:
+        size: 0
+        name: name
+        description: description
+        language: language
+        id: id
+        version: version
+      properties:
+        id:
+          title: id
+          type: string
+        name:
+          title: name
+          type: string
+        description:
+          title: description
+          type: string
+        version:
+          title: version
+          type: string
+        language:
+          title: language
+          type: string
+        size:
+          description: Script size in bytes
+          title: size
+          type: integer
+      required:
+      - id
+      - name
+      title: Script
+      type: object
+    ScriptUpload:
+      properties:
+        script:
+          description: Script file
+          format: binary
+          type: string
+        name:
+          description: Script name
+          type: string
+        description:
+          description: Script description
+          type: string
+      required:
+      - script
+      type: object
+    ScriptExecutionCollection:
+      example:
+        items:
+        - id: id
+        - id: id
+      properties:
+        items:
+          items:
+            $ref: "#/components/schemas/ScriptExecutionReference"
+          title: items
+          type: array
+      required:
+      - items
+      title: ScriptExecutionCollection
+      type: object
+    ScriptExecutionReference:
+      example:
+        id: id
+      properties:
+        id:
+          description: Execution identifier
+          title: id
+          type: string
+      required:
+      - id
+      title: ScriptExecutionReference
+      type: object
+    ScriptExecution:
+      example:
+        result: "{}"
+        id: id
+        error: "{}"
+        parameters: "{}"
+        status: running
+      properties:
+        id:
+          title: id
+          type: string
+        status:
+          enum:
+          - running
+          - completed
+          - failed
+          - terminated
+          title: status
+          type: string
+        parameters:
+          description: Execution parameters
+          title: parameters
+          type: object
+        result:
+          description: Execution result
+          title: result
+          type: object
+        error:
+          description: Error information
+          title: error
+          type: object
+      required:
+      - id
+      - status
+      title: ScriptExecution
+      type: object
+    ScriptExecutionRequest:
+      example:
+        parameters: "{}"
+        timeout: 0
+      properties:
+        timeout:
+          description: Execution timeout in seconds
+          title: timeout
+          type: integer
+        parameters:
+          description: Script parameters
+          title: parameters
+          type: object
+      title: ScriptExecutionRequest
+      type: object
+    Error:
+      properties:
+        error:
+          $ref: "#/components/schemas/Error_error"
+      required:
+      - error
+      type: object
+    Snapshot_data:
+      oneOf:
+      - type: number
+      - type: string
+      - type: boolean
+      title: Snapshot_data
+    TriggerCondition_values_inner:
+      oneOf:
+      - type: string
+      - type: number
+      - type: boolean
+      title: TriggerCondition_values_inner
+    Error_error:
+      properties:
+        code:
+          description: Error code
+          title: code
+          type: string
+        message:
+          description: Error message
+          title: message
+          type: string
+        details:
+          description: Additional error details
+          title: details
+          type: object
+      required:
+      - code
+      - message
+      title: Error_error
+      type: object
+  securitySchemes:
+    BearerAuth:
+      bearerFormat: JWT
+      description: JWT token for authentication
+      scheme: bearer
+      type: http
+      x-bearerInfoFunc: sovd_server.controllers.security_controller.info_from_BearerAuth
+    ApiKeyAuth:
+      description: API key for authentication
+      in: header
+      name: Authorization
+      type: apiKey
+      x-apikeyInfoFunc: sovd_server.controllers.security_controller.info_from_ApiKeyAuth

@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "sovd-server"
+version = "1.0.0"
+description = "SOVD (Service-Oriented Vehicle Diagnostics) API Server"
+authors = ["SOVD API Support"]
+readme = "README.md"
+packages = [{include = "sovd_server"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+connexion = {extras = ["flask", "uvicorn"], version = "^3.2.0"}
+flask = "^2.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.0"
+pytest-flask = "^1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
