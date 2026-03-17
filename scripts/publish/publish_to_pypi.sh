@@ -33,10 +33,11 @@ if ! command -v poetry >/dev/null 2>&1; then
     exit 1
 fi
 
-if ! command -v twine >/dev/null 2>&1; then
+if ! poetry run twine --version >/dev/null 2>&1; then
     print_status "Installing twine..."
-    pip install twine
+    poetry run pip install twine
 fi
+TWINE="poetry run twine"
 
 # Clean previous builds
 print_status "Cleaning previous builds..."
@@ -54,7 +55,7 @@ print_success "Package built successfully!"
 
 # Check
 print_status "Checking package..."
-twine check dist/* || { print_error "Package check failed."; exit 1; }
+$TWINE check dist/* || { print_error "Package check failed."; exit 1; }
 print_success "Package check passed!"
 
 # Publish target
@@ -68,14 +69,14 @@ read -p "Enter your choice (1-3): " choice
 case $choice in
     1)
         print_status "Publishing to TestPyPI..."
-        twine upload --repository testpypi dist/*
+        $TWINE upload --repository testpypi dist/*
         print_success "Published to TestPyPI! Test with: pip install -i https://test.pypi.org/simple/ sovd-server"
         ;;
     2)
         print_warning "Publishing to PyPI (production)..."
         read -p "Are you sure? (y/N): " confirm
         if [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]]; then
-            twine upload dist/*
+            $TWINE upload dist/*
             print_success "Published to PyPI! Install with: pip install sovd-server"
         else
             print_status "Publishing cancelled."
@@ -83,11 +84,11 @@ case $choice in
         ;;
     3)
         print_status "Publishing to TestPyPI first..."
-        twine upload --repository testpypi dist/*
+        $TWINE upload --repository testpypi dist/*
         print_success "Published to TestPyPI!"
         read -p "Test from TestPyPI, then press Enter to publish to PyPI..."
         print_warning "Publishing to PyPI..."
-        twine upload dist/*
+        $TWINE upload dist/*
         print_success "Published to PyPI! Install with: pip install sovd-server"
         ;;
     *)
