@@ -1,15 +1,10 @@
 import unittest
-import sys
-import os
-
-# Add the generated directory to the path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'generated'))
 
 from flask import json
 
 from sovd_server.models.configuration import Configuration  # noqa: E501
 from sovd_server.models.configuration_write import ConfigurationWrite  # noqa: E501
-from sovd_server.models.configuration_write_multipart import ConfigurationWriteMultipart  # noqa: E501
+# ConfigurationWriteMultipart not in current OpenAPI spec
 from sovd_server.models.cyclic_subscription import CyclicSubscription  # noqa: E501
 from sovd_server.models.cyclic_subscription_collection import CyclicSubscriptionCollection  # noqa: E501
 from sovd_server.models.cyclic_subscription_create import CyclicSubscriptionCreate  # noqa: E501

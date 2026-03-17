@@ -207,6 +207,10 @@ The system is designed to be easily extensible:
 3. **Modify data**: Update the YAML files with new data
 4. **Add endpoints**: Extend the enhanced server with new routes
 
+## Documentation
+
+Full documentation is in the [docs/](docs/INDEX.md) directory: configuration, contributing, testing, deployment, security, and changelog.
+
 ## Notes
 
 - The server runs without authentication for testing purposes

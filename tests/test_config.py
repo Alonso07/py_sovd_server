@@ -4,12 +4,7 @@ Test SOVD Configuration
 Tests the YAML configuration loading and data retrieval
 """
 
-import sys
-import os
 import json
-
-# Add the src directory to the path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from sovd_server.config_loader import config_loader
 

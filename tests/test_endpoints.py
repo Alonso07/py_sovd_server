@@ -1,15 +1,25 @@
 #!/usr/bin/env python3
 """
 Test SOVD Server Endpoints
-Tests all the enhanced server endpoints
+Tests all the enhanced server endpoints.
+Run with pytest for the unit test; run as __main__ for full endpoint checks (server must be running).
 """
 
-import requests
 import json
 import sys
 
-def test_endpoint(url, expected_status=200, description=""):
-    """Test a single endpoint"""
+import requests
+
+from sovd_server import app
+
+
+def test_app_import():
+    """Ensure the Flask app can be imported (smoke test)."""
+    assert app is not None
+
+
+def check_endpoint(url, expected_status=200, description=""):
+    """Check a single endpoint (helper; not collected by pytest)."""
     try:
         response = requests.get(url, timeout=5)
         print(f"✓ {description or url}")
@@ -45,45 +55,45 @@ def main():
     # Test basic endpoints
     print("1. Basic Endpoints")
     print("-" * 20)
-    test_endpoint(f"{base_url}/health", description="Health Check")
-    test_endpoint(f"{base_url}/version-info", description="Version Info")
-    
+    check_endpoint(f"{base_url}/health", description="Health Check")
+    check_endpoint(f"{base_url}/version-info", description="Version Info")
+
     # Test collection endpoints
     print("2. Collection Endpoints")
     print("-" * 20)
-    test_endpoint(f"{base_url}/areas", description="Areas Collection")
-    test_endpoint(f"{base_url}/components", description="Components Collection")
-    test_endpoint(f"{base_url}/apps", description="Apps Collection")
-    
+    check_endpoint(f"{base_url}/areas", description="Areas Collection")
+    check_endpoint(f"{base_url}/components", description="Components Collection")
+    check_endpoint(f"{base_url}/apps", description="Apps Collection")
+
     # Test entity capabilities
     print("3. Entity Capabilities")
     print("-" * 20)
-    test_endpoint(f"{base_url}/engine", description="Engine Capabilities")
-    test_endpoint(f"{base_url}/engine/ecu", description="ECU Capabilities")
-    test_endpoint(f"{base_url}/camera/front", description="Camera Capabilities")
-    
+    check_endpoint(f"{base_url}/engine", description="Engine Capabilities")
+    check_endpoint(f"{base_url}/engine/ecu", description="ECU Capabilities")
+    check_endpoint(f"{base_url}/camera/front", description="Camera Capabilities")
+
     # Test data resources
     print("4. Data Resources")
     print("-" * 20)
-    test_endpoint(f"{base_url}/engine/data", description="Engine Data Resources")
-    test_endpoint(f"{base_url}/engine/data/SoftwarePartNumber", description="Software Part Number")
-    test_endpoint(f"{base_url}/engine/ecu/data", description="ECU Data Resources")
-    
+    check_endpoint(f"{base_url}/engine/data", description="Engine Data Resources")
+    check_endpoint(f"{base_url}/engine/data/SoftwarePartNumber", description="Software Part Number")
+    check_endpoint(f"{base_url}/engine/ecu/data", description="ECU Data Resources")
+
     # Test operations
     print("5. Operations")
     print("-" * 20)
-    test_endpoint(f"{base_url}/camera/front/operations", description="Camera Operations")
-    test_endpoint(f"{base_url}/camera/front/operations/calibratecamera", description="Calibrate Camera")
-    
+    check_endpoint(f"{base_url}/camera/front/operations", description="Camera Operations")
+    check_endpoint(f"{base_url}/camera/front/operations/calibratecamera", description="Calibrate Camera")
+
     # Test faults
     print("6. Faults")
     print("-" * 20)
-    test_endpoint(f"{base_url}/engine/faults", description="Engine Faults")
-    
+    check_endpoint(f"{base_url}/engine/faults", description="Engine Faults")
+
     # Test modes
     print("7. Modes")
     print("-" * 20)
-    test_endpoint(f"{base_url}/engine/modes", description="Engine Modes")
+    check_endpoint(f"{base_url}/engine/modes", description="Engine Modes")
     
     print("=" * 50)
     print("Endpoint testing completed!")

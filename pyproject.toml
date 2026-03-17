@@ -38,6 +38,8 @@ dev = [
     "black",
     "flake8",
     "mypy",
+    "bandit",
+    "safety",
 ]
 
 [project.scripts]
