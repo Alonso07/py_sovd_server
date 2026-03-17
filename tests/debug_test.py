@@ -7,7 +7,7 @@ import os
 import sys
 
 # Add the src directory to the path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from sovd_server.config_loader import config_loader
 
@@ -18,7 +18,7 @@ config_loader.load_all_configs()
 entity_path = "/engine/ecu"
 print(f"Looking up entity: {entity_path}")
 
-for entity_type in ['areas', 'components', 'apps']:
+for entity_type in ["areas", "components", "apps"]:
     print(f"  Checking {entity_type}...")
     entity = config_loader.get_entity_by_id(entity_type, entity_path)
     if entity:
@@ -30,15 +30,15 @@ for entity_type in ['areas', 'components', 'apps']:
 
 # Test data resource lookup
 print(f"\nTesting data resource lookup for {entity_path}...")
-entity = config_loader.get_entity_by_id('components', entity_path)
+entity = config_loader.get_entity_by_id("components", entity_path)
 if entity:
-    resource_files = entity.get('resources', {}).get('data_resources', [])
+    resource_files = entity.get("resources", {}).get("data_resources", [])
     print(f"Resource files: {resource_files}")
-    
+
     for resource_file in resource_files:
         print(f"Loading resource file: {resource_file}")
-        resource_config = config_loader.load_resource_config('data', resource_file)
-        resources = resource_config.get('data_resources', [])
+        resource_config = config_loader.load_resource_config("data", resource_file)
+        resources = resource_config.get("data_resources", [])
         print(f"Found {len(resources)} resources in {resource_file}")
         for resource in resources:
             print(f"  - {resource['id']}: {resource['name']}")

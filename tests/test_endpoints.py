@@ -27,9 +27,9 @@ def check_endpoint(url, expected_status=200, description=""):
         if response.status_code == expected_status:
             try:
                 data = response.json()
-                if isinstance(data, dict) and 'items' in data:
+                if isinstance(data, dict) and "items" in data:
                     print(f"  Items: {len(data['items'])}")
-                elif isinstance(data, dict) and 'versions' in data:
+                elif isinstance(data, dict) and "versions" in data:
                     print(f"  Versions: {len(data['versions'])}")
                 else:
                     print(f"  Response: {str(data)[:100]}...")
@@ -45,13 +45,14 @@ def check_endpoint(url, expected_status=200, description=""):
         print()
         return False
 
+
 def main():
     """Test all endpoints"""
     base_url = "http://localhost:8080"
-    
+
     print("Testing SOVD Enhanced Server Endpoints")
     print("=" * 50)
-    
+
     # Test basic endpoints
     print("1. Basic Endpoints")
     print("-" * 20)
@@ -76,14 +77,21 @@ def main():
     print("4. Data Resources")
     print("-" * 20)
     check_endpoint(f"{base_url}/engine/data", description="Engine Data Resources")
-    check_endpoint(f"{base_url}/engine/data/SoftwarePartNumber", description="Software Part Number")
+    check_endpoint(
+        f"{base_url}/engine/data/SoftwarePartNumber", description="Software Part Number"
+    )
     check_endpoint(f"{base_url}/engine/ecu/data", description="ECU Data Resources")
 
     # Test operations
     print("5. Operations")
     print("-" * 20)
-    check_endpoint(f"{base_url}/camera/front/operations", description="Camera Operations")
-    check_endpoint(f"{base_url}/camera/front/operations/calibratecamera", description="Calibrate Camera")
+    check_endpoint(
+        f"{base_url}/camera/front/operations", description="Camera Operations"
+    )
+    check_endpoint(
+        f"{base_url}/camera/front/operations/calibratecamera",
+        description="Calibrate Camera",
+    )
 
     # Test faults
     print("6. Faults")
@@ -94,9 +102,10 @@ def main():
     print("7. Modes")
     print("-" * 20)
     check_endpoint(f"{base_url}/engine/modes", description="Engine Modes")
-    
+
     print("=" * 50)
     print("Endpoint testing completed!")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

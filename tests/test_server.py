@@ -8,33 +8,40 @@ import sys
 import os
 
 # Add the generated directory to the path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'generated'))
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "generated"))
 
 from sovd_server import encoder
 from sovd_server.controllers import default_controller
 
+
 def create_app():
     """Create the Flask app without authentication"""
-    app = connexion.App(__name__, specification_dir=os.path.join(os.path.dirname(__file__), '..', 'generated', 'sovd_server', 'openapi'))
+    app = connexion.App(
+        __name__,
+        specification_dir=os.path.join(
+            os.path.dirname(__file__), "..", "generated", "sovd_server", "openapi"
+        ),
+    )
     app.app.json_encoder = encoder.JSONEncoder
-    
+
     # Add API without security requirements
     app.add_api(
-        'openapi.yaml',
-        arguments={'title': 'SOVD API'},
+        "openapi.yaml",
+        arguments={"title": "SOVD API"},
         pythonic_params=True,
         strict_validation=False,
-        validate_responses=False
+        validate_responses=False,
     )
-    
+
     # Disable authentication for testing
     @app.app.before_request
     def disable_auth():
         pass
-    
+
     return app
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     app = create_app()
     print("Starting SOVD Server (no authentication)...")
     print("Available endpoints:")
