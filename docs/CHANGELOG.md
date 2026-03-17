@@ -7,14 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2025-03-16
+
+### Changed
+- Migrated project to Poetry (pyproject.toml, poetry.lock; removed setup.py)
+- CI: use Poetry for install/build; fixed Windows (bash shell for poetry steps)
+- Build: resolve symlinks before packaging for wheel/sdist
+- Docs and README updated for Poetry workflow
+
 ### Added
+- `make build` and `scripts/build_resolve_symlinks.sh` for distribution builds
 - Documentation (INDEX, CONFIGURATION, CONTRIBUTING, SECURITY, CODE_OF_CONDUCT, TESTING, DEPLOYMENT)
 - GitHub Actions CI workflow (lint, test, security checks)
-- Dependabot configuration
-- Issue templates (bug report, feature request)
-- Pull request template
+- Dependabot configuration, issue/PR templates
 
-## [1.0.0] - (current)
+## [1.0.0] - (initial release)
 
 ### Added
 - SOVD server implementation based on ISO/DIS 17978-3:2025
