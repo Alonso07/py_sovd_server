@@ -1,227 +1,144 @@
-# SOVD Server with YAML Configuration
+# SOVD Server
 
-This project implements a Service-Oriented Vehicle Diagnostics (SOVD) server based on ISO/DIS 17978-3:2025 with YAML-based configuration support.
+A **Service-Oriented Vehicle Data (SOVD)** server implementation based on **ISO/DIS 17978-3:2025**, with YAML-based configuration.
 
 ## Features
 
-- **Hierarchical YAML Configuration**: Multi-level configuration system with gateway, entity, and resource configurations
-- **Real Data Endpoints**: Actual data for data resources, operations, faults, and modes
-- **No Authentication**: Simplified setup without authorization layer for testing
-- **RESTful API**: Full SOVD API implementation with proper JSON responses
-- **Configurable Entities**: Support for areas, components, and applications
-- **Resource Management**: Data resources, operations, faults, modes, and configurations
+- **YAML-driven configuration** — Gateway, entities (areas, components, apps), and resources (data, operations, faults, modes) defined in YAML
+- **RESTful SOVD API** — Data resources, operations, faults, and modes with JSON responses
+- **No authentication** — Simplified setup for development and testing
+- **CORS enabled** — Ready for web and tool clients
 
-## Project Structure
+## Requirements
+
+- **Python 3.9+**
+- **Poetry** — [Install Poetry](https://python-poetry.org/docs/#installation) if you don’t have it
+
+## Quick start
+
+```bash
+# Clone and enter the project
+cd sovd_server
+
+# Install dependencies (creates a virtual environment automatically)
+poetry install
+# or
+make install
+
+# Run the server
+poetry run sovd-server
+# or
+make run-server
+```
+
+Server runs at **http://127.0.0.1:8080** by default. Try:
+
+- **Health:** `curl http://localhost:8080/health`
+- **Areas:** `curl http://localhost:8080/areas`
+- **Engine data:** `curl http://localhost:8080/engine/data`
+
+## Project layout
 
 ```
 sovd_server/
-├── src/
-│   └── sovd_server/               # Main source code
-│       ├── config/                # Configuration files
-│       │   ├── sovd_gateway.yaml  # Main gateway configuration
-│       │   ├── entities/          # Entity configurations
-│       │   │   ├── areas.yaml
-│       │   │   ├── components.yaml
-│       │   │   └── apps.yaml
-│       │   └── resources/         # Resource configurations
-│       │       ├── data/          # Data resource configs
-│       │       ├── operations/    # Operation configs
-│       │       ├── faults/        # Fault configs
-│       │       └── modes/         # Mode configs
-│       ├── enhanced_server.py     # Enhanced server with YAML support
-│       ├── config_loader.py       # YAML configuration loader
-│       └── run_enhanced_server.py # Server runner script
-├── tests/                         # Test files
-│   ├── test_config.py             # Configuration testing
-│   ├── test_endpoints.py          # Endpoint testing
-│   └── debug_*.py                 # Debug utilities
-├── generated/                     # Auto-generated SOVD server
-├── docs/                          # Documentation
-├── requirements.txt               # Dependencies
-├── setup.py                       # Package setup
-├── pyproject.toml                 # Modern Python project config
-└── Makefile                       # Development commands
+├── src/sovd_server/           # Main package
+│   ├── config/                # YAML configuration
+│   │   ├── sovd_gateway.yaml  # Gateway (host, port, logging)
+│   │   ├── entities/          # Areas, components, apps
+│   │   └── resources/         # Data, operations, faults, modes
+│   ├── config_loader.py       # YAML loader
+│   ├── enhanced_server.py     # Flask/Connexion server
+│   └── run_enhanced_server.py # CLI entry point
+├── tests/
+├── docs/                      # Additional documentation
+├── pyproject.toml              # Project and dependencies (Poetry)
+├── Makefile                   # Convenience commands
+└── README.md
 ```
 
-## Configuration System
+## Development
 
-### Gateway Configuration (`config/sovd_gateway.yaml`)
-- Network settings (host, port)
-- Logging configuration
-- Security settings (disabled for testing)
-- Entity and resource file references
+| Command | Description |
+|--------|-------------|
+| `make install` | Install dependencies (Poetry) |
+| `make run-server` | Start the SOVD server |
+| `make test` | Run tests |
+| `make run-tests` | Run tests with coverage |
+| `make lint` | Run flake8 and mypy |
+| `make format` | Format code with Black |
+| `make format-check` | Check formatting only |
+| `make security` | Run bandit and safety |
+| `make ci-local` | Lint, format-check, security, test |
+| `make version` | Show package version |
+| `make build` | Build wheel and sdist for distribution |
+| `make clean` | Remove build artifacts and caches |
 
-### Entity Configurations
-- **Areas**: Vehicle areas (engine, transmission, brakes)
-- **Components**: Vehicle components (ECU, sensors, cameras)
-- **Apps**: Diagnostic applications
+All commands run via Poetry (e.g. `poetry run pytest`). You can also run tools directly:
 
-### Resource Configurations
-- **Data Resources**: Actual data with schemas (e.g., SoftwarePartNumber, EngineRPM)
-- **Operations**: Operation definitions with request/response payloads (e.g., calibratecamera)
-- **Faults**: Fault definitions with severity and diagnostic information
-- **Modes**: Operation modes with capabilities and limitations
-
-## Installation
-
-1. **Set up virtual environment**:
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
-
-2. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Install in development mode**:
-   ```bash
-   pip install -e .
-   ```
-
-4. **Test configuration**:
-   ```bash
-   python tests/test_config.py
-   ```
-
-## Running the Server
-
-### Enhanced Server (Recommended)
 ```bash
-make run-server
-# or
-python src/sovd_server/run_enhanced_server.py
+poetry run pytest tests/ -v
+poetry run black src/ tests/
+poetry run flake8 src/ tests/
 ```
 
-### Simple Server (Basic)
+## Configuration
+
+- **Gateway:** `src/sovd_server/config/sovd_gateway.yaml` — host, port, logging, entity/resource file paths
+- **Entities:** `config/entities/` — areas, components, applications
+- **Resources:** `config/resources/` — data, operations, faults, modes
+
+See [docs/](docs/INDEX.md) for detailed configuration and API notes.
+
+## API overview
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /health` | Health check |
+| `GET /version-info` | Server version |
+| `GET /areas`, `/components`, `/apps` | List entities |
+| `GET /{entity}/data` | Data resources for an entity |
+| `GET /{entity}/data/{id}` | Single data resource |
+| `GET /{entity}/operations` | Operations |
+| `POST /{entity}/operations/{id}` | Execute operation |
+| `GET /{entity}/faults`, `GET /{entity}/modes` | Faults and modes |
+
+Example:
+
 ```bash
-python generated/simple_server.py
-```
-
-## Development Commands
-
-```bash
-make help          # Show all available commands
-make install-dev   # Install development dependencies
-make test          # Run all tests
-make lint          # Run linting checks
-make format        # Format code with black
-make clean         # Clean up build artifacts
-```
-
-## API Endpoints
-
-### Basic Endpoints
-- `GET /health` - Health check
-- `GET /version-info` - Server version information
-
-### Collection Endpoints
-- `GET /areas` - List vehicle areas
-- `GET /components` - List vehicle components  
-- `GET /apps` - List diagnostic applications
-
-### Entity Endpoints
-- `GET /{entity-path}` - Get entity capabilities
-- `GET /{entity-path}/data` - Get data resources
-- `GET /{entity-path}/data/{data-id}` - Get specific data resource
-- `GET /{entity-path}/operations` - Get operations
-- `GET /{entity-path}/operations/{operation-id}` - Get specific operation
-- `POST /{entity-path}/operations/{operation-id}` - Start operation execution
-- `GET /{entity-path}/faults` - Get faults
-- `GET /{entity-path}/modes` - Get modes
-
-## Example Usage
-
-### Get Engine Data
-```bash
-curl http://localhost:8080/engine/data
-```
-
-### Get Software Part Number
-```bash
+# Engine software part number
 curl http://localhost:8080/engine/data/SoftwarePartNumber
-```
 
-### Start Camera Calibration
-```bash
+# Start camera calibration
 curl -X POST http://localhost:8080/camera/front/operations/calibratecamera \
   -H "Content-Type: application/json" \
   -d '{"calibration_type": "automatic", "target_distance": 10.0}'
 ```
 
-## Configuration Examples
+## Installing the package
 
-### Data Resource Example
-```yaml
-data_resources:
-  - id: "SoftwarePartNumber"
-    name: "Software Part Number"
-    description: "Current software part number installed on the engine ECU"
-    category: "software"
-    data:
-      value: "SW-ENG-2024.1.0-REV-A"
-      version: "2024.1.0"
-      revision: "A"
-```
+From PyPI (when published):
 
-### Operation Example
-```yaml
-operations:
-  - id: "calibratecamera"
-    name: "Calibrate Camera"
-    description: "Calibrate the front camera system for optimal performance"
-    execution:
-      type: "asynchronous"
-      timeout: 300
-    request_payload:
-      calibration_type:
-        type: "string"
-        enum: ["automatic", "manual", "advanced"]
-        default: "automatic"
-```
-
-## Testing
-
-### Run All Tests
 ```bash
-make test
+pip install sovd-server
+sovd-server
 ```
 
-### Configuration Test
+From the project (editable):
+
 ```bash
-python tests/test_config.py
+poetry install
+poetry run sovd-server
 ```
-
-### Endpoint Test
-```bash
-python tests/test_endpoints.py
-```
-
-## Development
-
-The system is designed to be easily extensible:
-
-1. **Add new entities**: Create new YAML files in `src/sovd_server/config/entities/`
-2. **Add new resources**: Create new YAML files in `src/sovd_server/config/resources/`
-3. **Modify data**: Update the YAML files with new data
-4. **Add endpoints**: Extend the enhanced server with new routes
 
 ## Documentation
 
-Full documentation is in the [docs/](docs/INDEX.md) directory: configuration, contributing, testing, deployment, security, and changelog.
+- [docs/INDEX.md](docs/INDEX.md) — Documentation index
+- [docs/CONFIGURATION.md](docs/CONFIGURATION.md) — Configuration details
+- [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) — How to contribute
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — Deployment and PyPI publishing
+- [docs/TESTING.md](docs/TESTING.md) — Testing
+- [docs/VERSIONING.md](docs/VERSIONING.md) — Version and release process
 
-## Notes
+## License
 
-- The server runs without authentication for testing purposes
-- All configuration is loaded from YAML files
-- The system uses the auto-generated SOVD models for proper API compliance
-- CORS is enabled for web client testing
-- Logging is configured through the gateway configuration
-
-## Troubleshooting
-
-1. **Configuration not loading**: Check file paths in YAML files
-2. **Endpoints returning 404**: Verify entity paths match configuration
-3. **Data not found**: Check resource file references in entity configs
-4. **Server not starting**: Check port availability and dependencies
+MIT. See [LICENSE](LICENSE) if present.

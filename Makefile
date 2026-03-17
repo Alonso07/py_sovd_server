@@ -1,133 +1,94 @@
-# SOVD Server - use a virtual environment (recommended on macOS/Homebrew: run "make venv" first)
-# If ./venv exists we use it; otherwise we use PYTHON / python -m pip (requires active venv or --break-system-packages)
-ifneq (,$(wildcard venv/bin/python))
-  PYTHON := venv/bin/python
-  PIP := venv/bin/pip
-else
-  PYTHON ?= python
-  PIP ?= $(PYTHON) -m pip
-endif
+# SOVD Server - Poetry-based development
+# Prerequisite: install Poetry (https://python-poetry.org/docs/#installation), then run 'make install'
 
-.PHONY: help venv install install-dev test lint format format-check security clean run-server run-tests
-.PHONY: test-python310 test-python311 test-python312 test-versions ci-local version setup
+POETRY ?= poetry
+
+.PHONY: help install install-dev run-server test run-tests lint format format-check security
+.PHONY: test-python310 test-python311 test-python312 test-versions ci-local version clean setup export-requirements build
 
 help:  ## Show this help message
-	@echo "SOVD Server Development Commands"
-	@echo "================================"
-	@echo "  venv             - Create venv and install dev deps (run this first on macOS/Homebrew)"
-	@echo "  install          - Install package in development mode (uses venv if present)"
-	@echo "  install-dev      - Install with dev dependencies (uses venv if present)"
-	@echo "  run-server       - Run the enhanced server"
-	@echo "  test             - Run all tests"
-	@echo "  run-tests        - Run tests with coverage report"
+	@echo "SOVD Server (Poetry)"
+	@echo "===================="
+	@echo "  install          - Install dependencies (poetry install)"
+	@echo "  install-dev      - Same as install (dev deps included by default)"
+	@echo "  run-server       - Run the enhanced SOVD server"
+	@echo "  test             - Run tests"
+	@echo "  run-tests        - Run tests with coverage"
 	@echo "  lint             - Run flake8 and mypy"
 	@echo "  format           - Format code with black"
-	@echo "  format-check     - Check formatting only (no write)"
-	@echo "  security         - Run security checks (bandit, safety)"
-	@echo "  test-python310   - Run tests with Python 3.10 (isolated venv)"
-	@echo "  test-python311   - Run tests with Python 3.11 (isolated venv)"
-	@echo "  test-python312   - Run tests with Python 3.12 (isolated venv)"
-	@echo "  test-versions    - Run tests with 3.10, 3.11, 3.12 (skips missing)"
-	@echo "  ci-local         - Run full CI pipeline locally (lint, format-check, security, test)"
-	@echo "  version          - Show current package version"
-	@echo "  clean            - Remove build artifacts, caches, reports, versioned venvs"
-	@echo "  setup            - venv + print next steps"
+	@echo "  format-check     - Check formatting only"
+	@echo "  security         - Run bandit and safety"
+	@echo "  test-python310   - Run tests with Python 3.10"
+	@echo "  test-python311   - Run tests with Python 3.11"
+	@echo "  test-python312   - Run tests with Python 3.12"
+	@echo "  test-versions    - Run tests on 3.10, 3.11, 3.12 (skips missing)"
+	@echo "  ci-local         - Lint, format-check, security, test"
+	@echo "  version          - Show package version"
+	@echo "  export-requirements - Export requirements.txt (e.g. for Docker)"
+	@echo "  build            - Build wheel and sdist (resolves symlinks for distribution)"
+	@echo "  clean            - Remove build artifacts and caches"
+	@echo "  setup            - Install and print next steps"
 
-# Create venv and install (avoids externally-managed-environment on macOS/Homebrew)
-venv:  ## Create venv and install dev deps; other make targets will use this venv
-	@if [ ! -d venv ]; then python3 -m venv venv; fi
-	venv/bin/pip install --upgrade pip
-	venv/bin/pip install -e ".[dev]"
-	@echo "Done. Use: source venv/bin/activate  (or run make targets; they will use venv automatically)"
+install:  ## Install dependencies with Poetry
+	$(POETRY) install
 
-# Installation (uses venv if present, else current PYTHON/PIP)
-install:  ## Install the package in development mode
-	$(PIP) install -e .
+install-dev: install  ## Alias for install (Poetry includes dev deps by default)
 
-install-dev:  ## Install with dev dependencies (includes bandit, safety)
-	$(PIP) install -e ".[dev]"
-
-# Running
 run-server:  ## Run the enhanced server
-	$(PYTHON) -m sovd_server.run_enhanced_server
+	$(POETRY) run sovd-server
 
-# Testing
-test:  ## Run all tests
-	$(PYTHON) -m pytest tests/ -v
+test:  ## Run tests
+	$(POETRY) run pytest tests/ -v
 
 run-tests:  ## Run tests with coverage
-	$(PYTHON) -m pytest tests/ -v --cov=sovd_server --cov-report=term-missing --cov-report=html
+	$(POETRY) run pytest tests/ -v --cov=sovd_server --cov-report=term-missing --cov-report=html
 
-# Linting and formatting
 lint:  ## Run flake8 and mypy
-	$(PYTHON) -m flake8 src/ tests/ --max-line-length=88
-	$(PYTHON) -m mypy src/ || true
+	$(POETRY) run flake8 src/ tests/ --max-line-length=88
+	$(POETRY) run mypy src/ || true
 
 format:  ## Format code with black
-	$(PYTHON) -m black src/ tests/
+	$(POETRY) run black src/ tests/
 
 format-check:  ## Check formatting without changing files
-	$(PYTHON) -m black --check --diff src/ tests/
+	$(POETRY) run black --check --diff src/ tests/
 
-# Security checks (bandit, safety) - install with: make install-dev
 security:  ## Run bandit and safety
 	@mkdir -p reports
-	$(PYTHON) -m bandit -r src/ -f json -o reports/bandit-report.json || true
-	$(PYTHON) -m safety check --json > reports/safety-report.json 2>/dev/null || true
+	$(POETRY) run bandit -r src/ -f json -o reports/bandit-report.json || true
+	$(POETRY) run safety check --json > reports/safety-report.json 2>/dev/null || true
 	@echo "Security reports: reports/bandit-report.json, reports/safety-report.json"
 
-# Multi-version testing (creates .venv-310, .venv-311, .venv-312)
 test-python310:  ## Run tests with Python 3.10
 	@echo "Testing with Python 3.10..."
-	@if command -v python3.10 >/dev/null 2>&1; then \
-		python3.10 -m venv .venv-310 && \
-		.venv-310/bin/pip install --upgrade pip && \
-		.venv-310/bin/pip install -e ".[dev]" && \
-		.venv-310/bin/pip install bandit safety && \
-		.venv-310/bin/python -m pytest tests/ -v; \
-	else \
-		echo "Python 3.10 not found. Install it (e.g. pyenv, deadsnakes) and retry."; \
-		exit 1; \
-	fi
+	$(POETRY) env use python3.10 2>/dev/null || true
+	$(POETRY) install
+	$(POETRY) run pytest tests/ -v
 
 test-python311:  ## Run tests with Python 3.11
 	@echo "Testing with Python 3.11..."
-	@if command -v python3.11 >/dev/null 2>&1; then \
-		python3.11 -m venv .venv-311 && \
-		.venv-311/bin/pip install --upgrade pip && \
-		.venv-311/bin/pip install -e ".[dev]" && \
-		.venv-311/bin/pip install bandit safety && \
-		.venv-311/bin/python -m pytest tests/ -v; \
-	else \
-		echo "Python 3.11 not found. Install it (e.g. pyenv, deadsnakes) and retry."; \
-		exit 1; \
-	fi
+	$(POETRY) env use python3.11 2>/dev/null || true
+	$(POETRY) install
+	$(POETRY) run pytest tests/ -v
 
 test-python312:  ## Run tests with Python 3.12
 	@echo "Testing with Python 3.12..."
-	@if command -v python3.12 >/dev/null 2>&1; then \
-		python3.12 -m venv .venv-312 && \
-		.venv-312/bin/pip install --upgrade pip && \
-		.venv-312/bin/pip install -e ".[dev]" && \
-		.venv-312/bin/pip install bandit safety && \
-		.venv-312/bin/python -m pytest tests/ -v; \
-	else \
-		echo "Python 3.12 not found. Install it (e.g. pyenv, deadsnakes) and retry."; \
-		exit 1; \
-	fi
+	$(POETRY) env use python3.12 2>/dev/null || true
+	$(POETRY) install
+	$(POETRY) run pytest tests/ -v
 
-test-versions:  ## Run tests with 3.10, 3.11, 3.12 (skips missing)
-	@for v in 310 311 312; do \
-		if command -v python3.$$v >/dev/null 2>&1; then \
-			echo "=== Python 3.$$v ==="; \
-			$(MAKE) test-python3$$v || true; \
+test-versions:  ## Run tests on multiple Python versions (skips missing)
+	@for v in 3.10 3.11 3.12; do \
+		if command -v python$$v >/dev/null 2>&1; then \
+			echo "=== Python $$v ==="; \
+			$(POETRY) env use python$$v 2>/dev/null || true; \
+			$(POETRY) install --no-interaction && $(POETRY) run pytest tests/ -v || true; \
 		else \
-			echo "Skipping Python 3.$$v (not installed)"; \
+			echo "Skipping Python $$v (not installed)"; \
 		fi; \
 	done
 
-# Full CI pipeline locally
-ci-local:  ## Lint, format-check, security, test (simulate CI)
+ci-local:  ## Run full CI pipeline locally
 	@echo "Running CI pipeline locally..."
 	@$(MAKE) lint
 	@$(MAKE) format-check
@@ -135,30 +96,28 @@ ci-local:  ## Lint, format-check, security, test (simulate CI)
 	@$(MAKE) test
 	@echo "CI pipeline completed."
 
-# Version (single source: pyproject.toml)
-version:  ## Show current package version
-	@$(PYTHON) -c "import re; m=re.search(r'version\s*=\s*[\"']([^\"']+)[\"']', open('pyproject.toml').read()); print(m.group(1) if m else 'unknown')"
+version:  ## Show package version
+	@$(POETRY) version -s
 
-# Cleanup
-clean:  ## Remove build artifacts, caches, reports, versioned venvs
-	rm -rf build/
-	rm -rf dist/
-	rm -rf *.egg-info/
-	rm -rf src/*.egg-info/
-	rm -rf __pycache__/
-	rm -rf .pytest_cache/
-	rm -rf .mypy_cache/
-	rm -rf htmlcov/
+export-requirements:  ## Export requirements.txt (for Docker or non-Poetry CI)
+	$(POETRY) export -f requirements.txt --output requirements.txt --without-hashes
+	@echo "Exported requirements.txt"
+
+build:  ## Build wheel and sdist (resolves symlinks so dist package has real files)
+	./scripts/build_resolve_symlinks.sh build
+
+clean:  ## Remove build artifacts and caches
+	rm -rf build/ dist/ *.egg-info/ src/*.egg-info/
+	rm -rf __pycache__/ .pytest_cache/ .mypy_cache/ htmlcov/
 	rm -f .coverage coverage.xml
 	rm -rf reports/
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true
-	rm -rf .venv-310 .venv-311 .venv-312
-	@echo "Tip: to remove project venv too: rm -rf venv"
-	@echo "Clean done."
+	@echo "Clean done. To remove Poetry venv: $(POETRY) env remove --all"
 
-setup: venv  ## Set up development environment (create venv + install)
-	@echo "  make run-server   - start server"
+setup: install  ## First-time setup
+	@echo ""
+	@echo "Next steps:"
+	@echo "  make run-server   - start the SOVD server"
 	@echo "  make test         - run tests"
 	@echo "  make security     - run security checks"
-	@echo "  make test-versions - test with Python 3.10/3.11/3.12"

@@ -6,22 +6,22 @@ This guide covers testing for the SOVD Server.
 
 ### All Tests
 ```bash
-pytest tests/ -v
-# or
-make test
+poetry run pytest tests/ -v
+# or: make test
 ```
 
 ### With Coverage
 ```bash
-pytest tests/ -v --cov=sovd_server --cov-report=term-missing
-pytest tests/ --cov=sovd_server --cov-report=html
+poetry run pytest tests/ -v --cov=sovd_server --cov-report=term-missing
+poetry run pytest tests/ --cov=sovd_server --cov-report=html
+# or: make run-tests
 ```
 
 ### Specific Test Files
 ```bash
-pytest tests/test_config.py -v
-pytest tests/test_endpoints.py -v
-pytest tests/test_server.py -v
+poetry run pytest tests/test_config.py -v
+poetry run pytest tests/test_endpoints.py -v
+poetry run pytest tests/test_server.py -v
 ```
 
 ### Testing multiple Python versions
@@ -40,8 +40,8 @@ Install extra Python versions with [pyenv](https://github.com/pyenv/pyenv) or yo
 ### Security checks (bandit, safety)
 
 ```bash
-make install-dev   # installs dev + bandit, safety
-make security     # writes reports to reports/bandit-report.json, reports/safety-report.json
+poetry install   # includes dev deps (bandit, safety)
+make security    # writes reports to reports/bandit-report.json, reports/safety-report.json
 ```
 
 ### Simulate CI locally
@@ -90,6 +90,6 @@ def test_health_endpoint_returns_ok(client):
 
 ## Troubleshooting
 
-- **Import errors**: Run tests from project root and ensure the package is installed (`pip install -e .`).
+- **Import errors**: Run tests from project root and ensure dependencies are installed (`poetry install`).
 - **Config not found**: Tests that load config assume paths relative to `src/sovd_server/config/`; run from repo root.
 - **Port in use**: Endpoint tests may start a server; use a free port or mock the server where possible.

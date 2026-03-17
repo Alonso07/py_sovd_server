@@ -1,17 +1,11 @@
-[build-system]
-requires = ["setuptools>=45", "wheel"]
-build-backend = "setuptools.build_meta"
-
-[project]
+[tool.poetry]
 name = "sovd-server"
 version = "1.0.0"
 description = "SOVD (Service-Oriented Vehicle Data) Server Implementation"
 readme = "README.md"
-requires-python = ">=3.9,<4.0"
-license = {text = "MIT"}
-authors = [
-    {name = "SOVD Development Team", email = "dev@sovd.org"},
-]
+license = "MIT"
+authors = ["SOVD Development Team <dev@sovd.org>"]
+packages = [{ include = "sovd_server", from = "src" }]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -23,33 +17,30 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
-dependencies = [
-    "flask>=3.1.0",
-    "flask-cors>=3.0.0",
-    "pyyaml>=6.0",
-    "connexion[swagger-ui]>=3.0.0,<=3.3.0",
-    "jsonschema>=4.0.0",
-]
 
-[project.optional-dependencies]
-dev = [
-    "pytest>=8.4.2",
-    "pytest-cov",
-    "black",
-    "flake8",
-    "mypy",
-    "bandit",
-    "safety",
-]
+[tool.poetry.dependencies]
+python = ">=3.9,<4.0"
+flask = ">=3.1.0"
+flask-cors = ">=3.0.0"
+pyyaml = ">=6.0"
+connexion = { version = ">=3.0.0,<=3.3.0", extras = ["swagger-ui"] }
+jsonschema = ">=4.0.0"
 
-[project.scripts]
-sovd-server = "src.sovd_server.run_enhanced_server:main"
+[tool.poetry.group.dev.dependencies]
+pytest = ">=8.4.2"
+pytest-cov = "*"
+black = "*"
+flake8 = "*"
+mypy = "*"
+bandit = "*"
+safety = "*"
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.poetry.scripts]
+sovd-server = "sovd_server.run_enhanced_server:main"
 
-[tool.setuptools.package-data]
-sovd_server = ["config/*.yaml", "config/**/*.yaml"]
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.black]
 line-length = 88
@@ -57,7 +48,6 @@ target-version = ['py39']
 include = '\.pyi?$'
 extend-exclude = '''
 /(
-  # directories
   \.eggs
   | \.git
   | \.hg
@@ -69,7 +59,6 @@ extend-exclude = '''
   | buck-out
   | build
   | dist
-  # generated OpenAPI code (symlinked under src/sovd_server)
   | src/sovd_server/models
   | src/sovd_server/controllers
   | src/sovd_server/util\.py
@@ -91,12 +80,3 @@ python_version = "3.9"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
-
-[dependency-groups]
-dev = [
-    "pytest (>=8.4.2,<9.0.0)",
-    "pytest-cov (>=7.0.0,<8.0.0)",
-    "black (>=25.9.0,<26.0.0)",
-    "flake8 (>=7.3.0,<8.0.0)",
-    "mypy (>=1.18.2,<2.0.0)"
-]

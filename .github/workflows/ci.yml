@@ -17,21 +17,37 @@ jobs:
       uses: actions/setup-python@v6
       with:
         python-version: '3.11'
-        cache: 'pip'
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: 1.8.5
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v4
+      with:
+        path: .venv
+        key: venv-3.11-${{ hashFiles('**/poetry.lock') }}
 
     - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -e ".[dev]"
+      run: poetry install --no-interaction
+      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+
+    - name: Install dependencies (cache hit)
+      run: poetry install --no-interaction --sync
+      if: steps.cached-poetry-dependencies.outputs.cache-hit == 'true'
 
     - name: Run linting
       run: |
-        flake8 src/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 src/ tests/ --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+        poetry run flake8 src/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
+        poetry run flake8 src/ tests/ --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
 
     - name: Check code formatting
       run: |
-        black --check --diff \
+        poetry run black --check --diff \
           src/sovd_server/config_loader.py \
           src/sovd_server/enhanced_server.py \
           src/sovd_server/run_enhanced_server.py \
@@ -42,8 +58,8 @@ jobs:
     - name: Run security checks
       run: |
         mkdir -p reports
-        bandit -r src/ -f json -o reports/bandit-report.json || true
-        safety check --json --output reports/safety-report.json || true
+        poetry run bandit -r src/ -f json -o reports/bandit-report.json || true
+        poetry run safety check --json --output reports/safety-report.json || true
 
     - name: Upload security reports
       uses: actions/upload-artifact@v7
@@ -70,16 +86,20 @@ jobs:
       uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
-        cache: 'pip'
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: 1.8.5
+        virtualenvs-create: true
+        virtualenvs-in-project: true
 
     - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -e ".[dev]"
+      run: poetry install --no-interaction
 
     - name: Run tests with coverage
       run: |
-        pytest tests/ -v --cov=sovd_server --cov-report=xml --cov-report=term-missing
+        poetry run pytest tests/ -v --cov=sovd_server --cov-report=xml --cov-report=term-missing
 
     - name: Check if coverage file exists
       shell: bash
@@ -111,14 +131,19 @@ jobs:
       uses: actions/setup-python@v6
       with:
         python-version: '3.11'
-        cache: 'pip'
 
-    - name: Install build dependencies
-      run: |
-        python -m pip install --upgrade pip build wheel
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: 1.8.5
+        virtualenvs-create: true
+        virtualenvs-in-project: true
 
-    - name: Build package
-      run: python -m build
+    - name: Install dependencies (no dev)
+      run: poetry install --no-interaction --without dev
+
+    - name: Build package (resolve symlinks for wheel)
+      run: chmod +x scripts/build_resolve_symlinks.sh && ./scripts/build_resolve_symlinks.sh build
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v7

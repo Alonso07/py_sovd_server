@@ -66,25 +66,22 @@ src/sovd_server/config/
 
 ## 🚀 Quick Start
 
-### Installation
+### Installation (Poetry)
 ```bash
-python3 -m venv venv
-source venv/bin/activate  # or venv\Scripts\activate on Windows
-pip install -e .
+poetry install
+# or: make install
 ```
 
 ### Start Server
 ```bash
-python -m sovd_server.run_enhanced_server
-# or
-make run-server
+poetry run sovd-server
+# or: make run-server
 ```
 
 ### Run Tests
 ```bash
-pytest tests/ -v
-# or
-make test
+poetry run pytest tests/ -v
+# or: make test
 ```
 
 ### Test multiple Python versions locally

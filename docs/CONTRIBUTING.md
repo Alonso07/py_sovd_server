@@ -6,7 +6,7 @@ Thank you for your interest in contributing to the SOVD Server project. This doc
 
 ### Prerequisites
 - Python 3.9+
-- pip and venv
+- [Poetry](https://python-poetry.org/docs/#installation)
 - Git
 
 ### Development Setup
@@ -17,21 +17,22 @@ Thank you for your interest in contributing to the SOVD Server project. This doc
    cd sovd_server
    ```
 
-2. **Create virtual environment and install dependencies**
+2. **Install dependencies** (Poetry creates the virtual environment)
    ```bash
-   python3 -m venv venv
-   source venv/bin/activate   # Windows: venv\Scripts\activate
-   pip install -e ".[dev]"
+   poetry install
+   # or: make install
    ```
 
 3. **Run tests to verify setup**
    ```bash
-   pytest tests/ -v
+   poetry run pytest tests/ -v
+   # or: make test
    ```
 
 4. **Start the server for testing**
    ```bash
-   python -m sovd_server.run_enhanced_server
+   poetry run sovd-server
+   # or: make run-server
    ```
 
 ## 📋 Development Workflow
