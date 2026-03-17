@@ -5,6 +5,7 @@ Tests the YAML configuration loading and data retrieval
 """
 
 import json
+import sys
 
 from sovd_server.config_loader import config_loader
 

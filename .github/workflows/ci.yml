@@ -75,6 +75,7 @@ jobs:
         pytest tests/ -v --cov=sovd_server --cov-report=xml --cov-report=term-missing
 
     - name: Check if coverage file exists
+      shell: bash
       run: |
         if [ -f "coverage.xml" ]; then
           echo "Coverage file found"
