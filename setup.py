@@ -3,19 +3,34 @@
 Setup script for SOVD Server
 """
 
+import os
+
 from setuptools import setup, find_packages
 
-with open("README.md", "r", encoding="utf-8") as fh:
+_ROOT = os.path.dirname(os.path.abspath(__file__))
+
+with open(os.path.join(_ROOT, "README.md"), "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
-with open("requirements.txt", "r", encoding="utf-8") as fh:
-    requirements = []
-    for line in fh:
-        line = line.strip()
-        if line.startswith("# Development"):
-            break
-        if line and not line.startswith("#"):
-            requirements.append(line)
+requirements_path = os.path.join(_ROOT, "requirements.txt")
+if os.path.isfile(requirements_path):
+    with open(requirements_path, "r", encoding="utf-8") as fh:
+        requirements = []
+        for line in fh:
+            line = line.strip()
+            if line.startswith("# Development"):
+                break
+            if line and not line.startswith("#"):
+                requirements.append(line)
+else:
+    # Fallback when building from sdist without requirements.txt (use pyproject.toml deps)
+    requirements = [
+        "flask>=3.1.0",
+        "flask-cors>=3.0.0",
+        "pyyaml>=6.0",
+        "connexion[swagger-ui]>=3.0.0,<=3.3.0",
+        "jsonschema>=4.0.0",
+    ]
 
 setup(
     name="sovd-server",

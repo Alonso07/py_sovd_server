@@ -1,0 +1,3 @@
+# Include requirements so setup.py can read it when building from sdist
+include requirements.txt
+include README.md
