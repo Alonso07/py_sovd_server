@@ -127,8 +127,18 @@ def test_mode_round_robin():
 
 def test_fault_mode_independent_keys():
     """Different resource kinds / ids do not share round-robin state."""
-    f = {"id": "F1", "name": "n", "description": "d", "responses": [{"body": {"k": "f"}}]}
-    m = {"id": "M1", "name": "n", "description": "d", "responses": [{"body": {"k": "m"}}]}
+    f = {
+        "id": "F1",
+        "name": "n",
+        "description": "d",
+        "responses": [{"body": {"k": "f"}}],
+    }
+    m = {
+        "id": "M1",
+        "name": "n",
+        "description": "d",
+        "responses": [{"body": {"k": "m"}}],
+    }
     ep = "/engine/ecu"
     assert pick_fault_response(ep, f) == (200, {"k": "f"})
     assert pick_mode_response(ep, m) == (200, {"k": "m"})

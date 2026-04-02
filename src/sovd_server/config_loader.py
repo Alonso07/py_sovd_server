@@ -285,9 +285,7 @@ class SOVDConfigLoader:
             packages.extend(cfg.get("update_packages", []))
         return packages
 
-    def get_update_package_by_id(
-        self, package_id: str
-    ) -> Optional[Dict[str, Any]]:
+    def get_update_package_by_id(self, package_id: str) -> Optional[Dict[str, Any]]:
         """Return the first YAML update package with this id (any entity)."""
         for entity_type in ["areas", "components", "apps"]:
             if entity_type not in self.entity_configs:

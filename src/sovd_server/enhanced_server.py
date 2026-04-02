@@ -96,6 +96,7 @@ def _update_detail(package_id: str) -> Optional[dict]:
             return _public_update_package(resolved)
     return _public_update_package(pkg)
 
+
 # Load configuration
 config_loader.load_all_configs()
 gateway_config = config_loader.gateway_config
@@ -232,12 +233,15 @@ def updates_put_automated(update_package_id):
         return jsonify({"error": "Update package not found"}), 404
     pkg = config_loader.get_update_package_by_id(update_package_id)
     if pkg and not pkg.get("automated", False):
-        return jsonify(
-            {
-                "error_code": "update-automated-not-supported",
-                "message": "The package cannot be installed automatically",
-            }
-        ), 409
+        return (
+            jsonify(
+                {
+                    "error_code": "update-automated-not-supported",
+                    "message": "The package cannot be installed automatically",
+                }
+            ),
+            409,
+        )
     update_runtime.set_status(
         update_package_id,
         {"phase": "execute", "status": "inProgress", "progress": 0},
@@ -286,7 +290,11 @@ def entity_updates_list(entity_path):
     try:
         if not entity_path.startswith("/"):
             entity_path = "/" + entity_path
-        items = [p.get("id") for p in config_loader.get_update_packages(entity_path) if p.get("id")]
+        items = [
+            p.get("id")
+            for p in config_loader.get_update_packages(entity_path)
+            if p.get("id")
+        ]
         return jsonify({"items": items})
     except Exception as e:
         logger.error(f"Error listing entity updates: {e}")
@@ -401,7 +409,9 @@ def data_resource(entity_path, data_id):
             return jsonify({"error": "Data resource not found"}), 404
 
         status, body = pick_data_resource_response(entity_path, resource_data)
-        logger.info(f"Data resource requested: {entity_path}/{data_id} -> HTTP {status}")
+        logger.info(
+            f"Data resource requested: {entity_path}/{data_id} -> HTTP {status}"
+        )
         return jsonify(body), status
     except Exception as e:
         logger.error(f"Error getting data resource {data_id} for {entity_path}: {e}")
