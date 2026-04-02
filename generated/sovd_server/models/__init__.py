@@ -4,11 +4,13 @@ from sovd_server.models.configuration import Configuration
 from sovd_server.models.configuration_collection import ConfigurationCollection
 from sovd_server.models.configuration_reference import ConfigurationReference
 from sovd_server.models.configuration_write import ConfigurationWrite
+from sovd_server.models.configuration_write_multipart import ConfigurationWriteMultipart
 from sovd_server.models.cyclic_subscription import CyclicSubscription
 from sovd_server.models.cyclic_subscription_collection import CyclicSubscriptionCollection
 from sovd_server.models.cyclic_subscription_create import CyclicSubscriptionCreate
 from sovd_server.models.cyclic_subscription_reference import CyclicSubscriptionReference
 from sovd_server.models.cyclic_subscription_update import CyclicSubscriptionUpdate
+from sovd_server.models.data_error import DataError
 from sovd_server.models.data_list import DataList
 from sovd_server.models.data_list_collection import DataListCollection
 from sovd_server.models.data_list_create import DataListCreate
@@ -30,6 +32,7 @@ from sovd_server.models.fault import Fault
 from sovd_server.models.fault_collection import FaultCollection
 from sovd_server.models.fault_reference import FaultReference
 from sovd_server.models.fault_status import FaultStatus
+from sovd_server.models.generic_error import GenericError
 from sovd_server.models.mode import Mode
 from sovd_server.models.mode_collection import ModeCollection
 from sovd_server.models.mode_reference import ModeReference
@@ -56,5 +59,10 @@ from sovd_server.models.trigger_condition_values_inner import TriggerConditionVa
 from sovd_server.models.trigger_create import TriggerCreate
 from sovd_server.models.trigger_reference import TriggerReference
 from sovd_server.models.trigger_update import TriggerUpdate
+from sovd_server.models.update_package import UpdatePackage
+from sovd_server.models.update_package_id_list import UpdatePackageIdList
+from sovd_server.models.update_register_response import UpdateRegisterResponse
+from sovd_server.models.update_status import UpdateStatus
+from sovd_server.models.update_sub_progress import UpdateSubProgress
 from sovd_server.models.version import Version
 from sovd_server.models.version_info import VersionInfo

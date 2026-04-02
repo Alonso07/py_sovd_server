@@ -12,21 +12,26 @@ class DataResourceWrite(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, data=None):  # noqa: E501
+    def __init__(self, data=None, signature=None):  # noqa: E501
         """DataResourceWrite - a model defined in OpenAPI
 
         :param data: The data of this DataResourceWrite.  # noqa: E501
         :type data: object
+        :param signature: The signature of this DataResourceWrite.  # noqa: E501
+        :type signature: str
         """
         self.openapi_types = {
-            'data': object
+            'data': object,
+            'signature': str
         }
 
         self.attribute_map = {
-            'data': 'data'
+            'data': 'data',
+            'signature': 'signature'
         }
 
         self._data = data
+        self._signature = signature
 
     @classmethod
     def from_dict(cls, dikt) -> 'DataResourceWrite':
@@ -43,7 +48,7 @@ class DataResourceWrite(Model):
     def data(self) -> object:
         """Gets the data of this DataResourceWrite.
 
-        Data value to write  # noqa: E501
+        Data value to write (required per ISO 17978-3 Table 99)  # noqa: E501
 
         :return: The data of this DataResourceWrite.
         :rtype: object
@@ -54,7 +59,7 @@ class DataResourceWrite(Model):
     def data(self, data: object):
         """Sets the data of this DataResourceWrite.
 
-        Data value to write  # noqa: E501
+        Data value to write (required per ISO 17978-3 Table 99)  # noqa: E501
 
         :param data: The data of this DataResourceWrite.
         :type data: object
@@ -63,3 +68,26 @@ class DataResourceWrite(Model):
             raise ValueError("Invalid value for `data`, must not be `None`")  # noqa: E501
 
         self._data = data
+
+    @property
+    def signature(self) -> str:
+        """Gets the signature of this DataResourceWrite.
+
+        Optional security artefact for the data (independent of transport auth)  # noqa: E501
+
+        :return: The signature of this DataResourceWrite.
+        :rtype: str
+        """
+        return self._signature
+
+    @signature.setter
+    def signature(self, signature: str):
+        """Sets the signature of this DataResourceWrite.
+
+        Optional security artefact for the data (independent of transport auth)  # noqa: E501
+
+        :param signature: The signature of this DataResourceWrite.
+        :type signature: str
+        """
+
+        self._signature = signature

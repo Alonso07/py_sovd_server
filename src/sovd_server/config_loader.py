@@ -203,6 +203,21 @@ class SOVDConfigLoader:
 
         return faults
 
+    def get_fault(self, entity_path: str, fault_id: str) -> Optional[Dict[str, Any]]:
+        """Get a single fault definition by id for an entity."""
+        entity = self._entity_for_path(entity_path)
+        if not entity:
+            return None
+        fault_files = entity.get("resources", {}).get("faults", [])
+        for fault_file in fault_files:
+            if fault_file not in self.resource_configs.get("faults", {}):
+                self.load_resource_config("faults", fault_file)
+            fault_config = self.resource_configs["faults"][fault_file]
+            for fault in fault_config.get("faults", []):
+                if fault.get("id") == fault_id:
+                    return fault
+        return None
+
     def get_modes(self, entity_path: str) -> List[Dict[str, Any]]:
         """Get all modes for an entity"""
         # Find the entity configuration
@@ -232,6 +247,71 @@ class SOVDConfigLoader:
             modes.extend(entity_modes)
 
         return modes
+
+    def get_mode(self, entity_path: str, mode_id: str) -> Optional[Dict[str, Any]]:
+        """Get a single mode definition by id for an entity."""
+        entity = self._entity_for_path(entity_path)
+        if not entity:
+            return None
+        mode_files = entity.get("resources", {}).get("modes", [])
+        for mode_file in mode_files:
+            if mode_file not in self.resource_configs.get("modes", {}):
+                self.load_resource_config("modes", mode_file)
+            mode_config = self.resource_configs["modes"][mode_file]
+            for mode in mode_config.get("modes", []):
+                if mode.get("id") == mode_id:
+                    return mode
+        return None
+
+    def _entity_for_path(self, entity_path: str) -> Optional[Dict[str, Any]]:
+        for entity_type in ["areas", "components", "apps"]:
+            if entity_type not in self.entity_configs:
+                continue
+            for e in self.entity_configs[entity_type].get("entities", []):
+                if e.get("id") == entity_path:
+                    return e
+        return None
+
+    def get_update_packages(self, entity_path: str) -> List[Dict[str, Any]]:
+        """All update package definitions from YAML for an entity."""
+        entity = self._entity_for_path(entity_path)
+        if not entity:
+            return []
+        packages: List[Dict[str, Any]] = []
+        for yaml_file in entity.get("resources", {}).get("updates", []):
+            if yaml_file not in self.resource_configs.get("updates", {}):
+                self.load_resource_config("updates", yaml_file)
+            cfg = self.resource_configs["updates"][yaml_file]
+            packages.extend(cfg.get("update_packages", []))
+        return packages
+
+    def get_update_package_by_id(
+        self, package_id: str
+    ) -> Optional[Dict[str, Any]]:
+        """Return the first YAML update package with this id (any entity)."""
+        for entity_type in ["areas", "components", "apps"]:
+            if entity_type not in self.entity_configs:
+                continue
+            for entity in self.entity_configs[entity_type].get("entities", []):
+                for pkg in self.get_update_packages(entity["id"]):
+                    if pkg.get("id") == package_id:
+                        return pkg
+        return None
+
+    def get_all_update_package_ids(self) -> List[str]:
+        """Ordered unique ids for GET /updates `items` (ISO §7.18.2)."""
+        seen = set()
+        ordered: List[str] = []
+        for entity_type in ["areas", "components", "apps"]:
+            if entity_type not in self.entity_configs:
+                continue
+            for entity in self.entity_configs[entity_type].get("entities", []):
+                for pkg in self.get_update_packages(entity["id"]):
+                    pid = pkg.get("id")
+                    if pid and pid not in seen:
+                        seen.add(pid)
+                        ordered.append(pid)
+        return ordered
 
     def load_all_configs(self):
         """Load all configuration files"""

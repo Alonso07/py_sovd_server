@@ -64,6 +64,10 @@ gateway:
     configurations:
       config_dir: "config/resources/configurations/"
       description: "Configuration resource settings"
+
+    updates:
+      config_dir: "config/resources/updates/"
+      description: "Software update package definitions (ISO 17978-3 §7.18)"
       
   # API Configuration
   api:

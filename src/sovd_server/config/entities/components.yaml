@@ -20,6 +20,7 @@ entities:
       configurations: "/engine/ecu/configurations"
       scripts: "/engine/ecu/scripts"
       triggers: "/engine/ecu/triggers"
+      updates: "/engine/ecu/updates"
       
     resources:
       data_resources:
@@ -32,6 +33,8 @@ entities:
         - "config/resources/modes/ecu_modes.yaml"
       configurations:
         - "config/resources/configurations/ecu_configurations.yaml"
+      updates:
+        - "config/resources/updates/ecu_updates.yaml"
         
   - id: "/engine/sensors"
     name: "Engine Sensors"

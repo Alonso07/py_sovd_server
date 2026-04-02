@@ -9,7 +9,7 @@ info:
   license:
     name: ISO/DIS 17978-3:2025
   title: SOVD (Service-Oriented Vehicle Diagnostics) API
-  version: 1.0.0
+  version: 1.1.0
 servers:
 - description: SOVD Server
   url: "https://{sovd-server-host}/{exve-manufacturer-specific}"
@@ -634,7 +634,9 @@ paths:
       summary: Read a data resource
       x-openapi-router-controller: sovd_server.controllers.default_controller
     put:
-      description: Updates the value of a specific data resource
+      description: |
+        Writes the value of a data resource (ISO/DIS 17978-3:2025 §7.9.6). Only a single
+        resource can be written per request. Success returns 204 No Content with no body.
       operationId: update_data_resource
       parameters:
       - description: Path to the Entity
@@ -661,12 +663,14 @@ paths:
               $ref: "#/components/schemas/DataResourceWrite"
         required: true
       responses:
-        "200":
+        "204":
+          description: Data written successfully (no response body)
+        "400":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DataResource"
-          description: Data resource updated successfully
+                $ref: "#/components/schemas/DataError"
+          description: Request body invalid or signature wrong (Table 100)
       summary: Write a data resource
       x-openapi-router-controller: sovd_server.controllers.default_controller
   /{entity-path}/faults:
@@ -1634,6 +1638,173 @@ paths:
           description: Event stream established
       summary: Retrieve trigger events
       x-openapi-router-controller: sovd_server.controllers.default_controller
+  /updates:
+    get:
+      description: |
+        Returns available update packages for the SOVD server (ISO/DIS 17978-3:2025 §7.18.2).
+        An Entity may also expose `/updates` under its path for scoped updates.
+      operationId: get_updates
+      parameters:
+      - description: Requested target version or pattern
+        in: query
+        name: target-version
+        required: false
+        schema:
+          type: string
+      - description: Update origin (remote, proximity, or custom x-*)
+        in: query
+        name: origin
+        required: false
+        schema:
+          default: remote
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdatePackageIdList"
+          description: List of update package identifiers
+      summary: Query for software updates
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+    post:
+      description: Registers a new update package at the SOVD server (ISO/DIS 17978-3 §7.18.9).
+      operationId: register_update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRegisterRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateRegisterResponse"
+          description: Update package registered
+          headers:
+            Location:
+              description: URI of the created update package
+              schema:
+                type: string
+      summary: Register an update package
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /updates/{update-package-id}:
+    delete:
+      description: Deletes an update package not in execute phase (ISO/DIS 17978-3 §7.18.8).
+      operationId: delete_update_package
+      parameters:
+      - $ref: "#/components/parameters/UpdatePackageId"
+      responses:
+        "204":
+          description: Update package deleted
+        "405":
+          description: Not allowed for autonomous id or package in execute phase
+      summary: Delete update package
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+    get:
+      description: Returns detailed information for an update package (ISO/DIS 17978-3 §7.18.3).
+      operationId: get_update_package
+      parameters:
+      - $ref: "#/components/parameters/UpdatePackageId"
+      - description: Include JSON schema in response
+        in: query
+        name: include-schema
+        required: false
+        schema:
+          default: false
+          type: boolean
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdatePackage"
+          description: Update package details
+      summary: Retrieve details of an update package
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /updates/{update-package-id}/automated:
+    put:
+      description: Starts automated installation (ISO/DIS 17978-3 §7.18.4). Returns Location for status.
+      operationId: put_update_automated
+      parameters:
+      - $ref: "#/components/parameters/UpdatePackageId"
+      responses:
+        "202":
+          description: Accepted; poll status at Location header
+          headers:
+            Location:
+              description: URI of the update status resource
+              schema:
+                type: string
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericError"
+          description: Conflict (update in progress or automated not supported)
+      summary: Automated installation of an update
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /updates/{update-package-id}/prepare:
+    put:
+      description: Starts preparation of the update package (ISO/DIS 17978-3 §7.18.5).
+      operationId: put_update_prepare
+      parameters:
+      - $ref: "#/components/parameters/UpdatePackageId"
+      responses:
+        "202":
+          description: Accepted
+          headers:
+            Location:
+              description: URI of the update status resource
+              schema:
+                type: string
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericError"
+          description: Preparation already in progress
+      summary: Prepare installation of an update
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /updates/{update-package-id}/execute:
+    put:
+      description: Executes installation and activation (ISO/DIS 17978-3 §7.18.6).
+      operationId: put_update_execute
+      parameters:
+      - $ref: "#/components/parameters/UpdatePackageId"
+      responses:
+        "202":
+          description: Accepted
+          headers:
+            Location:
+              description: URI of the update status resource
+              schema:
+                type: string
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericError"
+          description: Another update execution in progress
+      summary: Execute installation of an update
+      x-openapi-router-controller: sovd_server.controllers.default_controller
+  /updates/{update-package-id}/status:
+    get:
+      description: Returns preparation or execution status (ISO/DIS 17978-3 §7.18.7).
+      operationId: get_update_status
+      parameters:
+      - $ref: "#/components/parameters/UpdatePackageId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateStatus"
+          description: Status of the update process
+      summary: Read status of an update
+      x-openapi-router-controller: sovd_server.controllers.default_controller
 components:
   parameters:
     EntityCollection:
@@ -1745,6 +1916,15 @@ components:
       explode: false
       in: path
       name: script-id
+      required: true
+      schema:
+        type: string
+      style: simple
+    UpdatePackageId:
+      description: Software update package identifier (ISO/DIS 17978-3 §7.18)
+      explode: false
+      in: path
+      name: update-package-id
       required: true
       schema:
         type: string
@@ -2394,12 +2574,172 @@ components:
         data: "{}"
       properties:
         data:
-          description: Data value to write
+          description: Data value to write (required per ISO 17978-3 Table 99)
           title: data
           type: object
+        signature:
+          description: Optional security artefact for the data (independent of transport auth)
+          type: string
       required:
       - data
       title: DataResourceWrite
+      type: object
+    DataError:
+      description: Error response for failed data write (ISO 17978-3 Table 100)
+      properties:
+        error_code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+      title: DataError
+      type: object
+    GenericError:
+      description: Error information (e.g. software update conflicts, ISO 17978-3 §7.18)
+      properties:
+        error_code:
+          type: string
+        message:
+          type: string
+        parameters:
+          additionalProperties: true
+          type: object
+      title: GenericError
+      type: object
+    UpdatePackageIdList:
+      description: Response body for GET /updates (ISO 17978-3 Table 257)
+      properties:
+        items:
+          description: Update package identifiers (includes special id `autonomous` when supported)
+          items:
+            type: string
+          type: array
+      required:
+      - items
+      title: UpdatePackageIdList
+      type: object
+    UpdatePackage:
+      description: Update package details (ISO 17978-3 Table 261)
+      properties:
+        id:
+          type: string
+        update_name:
+          type: string
+        update_translation_id:
+          type: string
+        automated:
+          type: boolean
+        origins:
+          items:
+            type: string
+          type: array
+        notes:
+          type: string
+        notes_translation_id:
+          type: string
+        user_activity:
+          type: string
+        user_activity_translation_id:
+          type: string
+        preconditions:
+          type: string
+        preconditions_translation_id:
+          type: string
+        execution_conditions:
+          type: string
+        duration:
+          description: Vehicle unavailability duration in seconds
+          type: integer
+        size:
+          description: Download size in kilobytes
+          type: integer
+        added_components:
+          items:
+            type: string
+          type: array
+        removed_components:
+          items:
+            type: string
+          type: array
+        updated_components:
+          items:
+            type: string
+          type: array
+        affected_components:
+          items:
+            type: string
+          type: array
+        schema:
+          description: Present when include-schema query parameter is true
+          type: object
+      required:
+      - id
+      - update_name
+      - size
+      title: UpdatePackage
+      type: object
+    UpdateRegisterRequest:
+      additionalProperties: true
+      description: Manufacturer-specific body to register an update package (ISO 17978-3 §7.18.9)
+      type: object
+    UpdateRegisterResponse:
+      properties:
+        id:
+          description: Identifier for the update package created by the SOVD server
+          type: string
+      required:
+      - id
+      title: UpdateRegisterResponse
+      type: object
+    UpdateStatus:
+      description: Preparation or execution status (ISO 17978-3 Table 270)
+      properties:
+        phase:
+          enum:
+          - prepare
+          - execute
+          type: string
+        status:
+          description: Phase-specific status (pending, inProgress, failed, completed, …)
+          type: string
+        progress:
+          description: Overall progress percent
+          maximum: 100
+          minimum: 0
+          type: integer
+        subprogress:
+          items:
+            $ref: "#/components/schemas/UpdateSubProgress"
+          type: array
+        step:
+          type: string
+        step_translation_id:
+          type: string
+        error:
+          $ref: "#/components/schemas/GenericError"
+      required:
+      - phase
+      - status
+      title: UpdateStatus
+      type: object
+    UpdateSubProgress:
+      properties:
+        entity:
+          description: URI of the Entity
+          type: string
+        status:
+          type: string
+        progress:
+          maximum: 100
+          minimum: 0
+          type: integer
+        error:
+          $ref: "#/components/schemas/GenericError"
+      required:
+      - entity
+      - status
+      title: UpdateSubProgress
       type: object
     DataListCollection:
       example:

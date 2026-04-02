@@ -41,3 +41,18 @@ modes:
     name: "Boot Mode"
     description: "ECU in boot/startup mode during initialization"
     tags: ["boot", "startup", "ecu", "initialization"]
+
+  - id: "ECU-RR-MODE"
+    name: "Round-robin demo mode"
+    description: "Cycles HTTP status/body on each GET .../modes/ECU-RR-MODE"
+    tags: ["demo", "round-robin"]
+    responses:
+      - status: 200
+        body:
+          demo: "mode-step-a"
+      - status: 503
+        body:
+          error: "mode-unavailable"
+      - status: 200
+        body:
+          demo: "mode-step-c"

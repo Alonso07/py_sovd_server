@@ -208,3 +208,300 @@ data_resources:
           type: "string"
           description: "Checksum for verification"
       required: ["value", "version", "revision", "build_date"]
+      
+  - id: "CalibrationData"
+    name: "Engine Calibration Data"
+    description: "Current engine calibration parameters and maps"
+    category: "calibration"
+    groups: ["calibration", "engine", "tuning"]
+    tags: ["calibration", "engine", "tuning", "parameters", "maps"]
+    
+    data:
+      calibration_id: "CAL-ENG-2024.1.0"
+      version: "2024.1.0"
+      calibration_date: "2024-01-15T10:30:00Z"
+      fuel_maps:
+        base_fuel_map: "BMF-001"
+        enrichment_map: "EMF-002"
+        cold_start_map: "CSM-003"
+      ignition_maps:
+        base_ignition_map: "BIM-001"
+        knock_retard_map: "KRM-002"
+        advance_map: "AM-003"
+      air_flow_maps:
+        maf_calibration: "MAF-001"
+        throttle_calibration: "TC-002"
+        idle_air_control: "IAC-003"
+      emission_maps:
+        egr_calibration: "EGR-001"
+        catalyst_heating: "CH-002"
+        lambda_control: "LC-003"
+      checksum: "b2c3d4e5f6a1"
+      validation_status: "valid"
+      
+    schema:
+      type: "object"
+      properties:
+        calibration_id:
+          type: "string"
+          description: "Unique calibration identifier"
+        version:
+          type: "string"
+          description: "Calibration version"
+        calibration_date:
+          type: "string"
+          format: "date-time"
+          description: "Calibration creation date"
+        fuel_maps:
+          type: "object"
+          properties:
+            base_fuel_map:
+              type: "string"
+              description: "Base fuel injection map ID"
+            enrichment_map:
+              type: "string"
+              description: "Fuel enrichment map ID"
+            cold_start_map:
+              type: "string"
+              description: "Cold start fuel map ID"
+          required: ["base_fuel_map", "enrichment_map", "cold_start_map"]
+        ignition_maps:
+          type: "object"
+          properties:
+            base_ignition_map:
+              type: "string"
+              description: "Base ignition timing map ID"
+            knock_retard_map:
+              type: "string"
+              description: "Knock retard map ID"
+            advance_map:
+              type: "string"
+              description: "Ignition advance map ID"
+          required: ["base_ignition_map", "knock_retard_map", "advance_map"]
+        air_flow_maps:
+          type: "object"
+          properties:
+            maf_calibration:
+              type: "string"
+              description: "Mass air flow sensor calibration ID"
+            throttle_calibration:
+              type: "string"
+              description: "Throttle position calibration ID"
+            idle_air_control:
+              type: "string"
+              description: "Idle air control calibration ID"
+          required: ["maf_calibration", "throttle_calibration", "idle_air_control"]
+        emission_maps:
+          type: "object"
+          properties:
+            egr_calibration:
+              type: "string"
+              description: "EGR system calibration ID"
+            catalyst_heating:
+              type: "string"
+              description: "Catalyst heating calibration ID"
+            lambda_control:
+              type: "string"
+              description: "Lambda control calibration ID"
+          required: ["egr_calibration", "catalyst_heating", "lambda_control"]
+        checksum:
+          type: "string"
+          description: "Calibration data checksum"
+        validation_status:
+          type: "string"
+          enum: ["valid", "invalid", "pending", "error"]
+          description: "Calibration validation status"
+      required: ["calibration_id", "version", "calibration_date", "fuel_maps", "ignition_maps", "air_flow_maps", "emission_maps", "checksum", "validation_status"]
+      
+  - id: "CalibrationData"
+    name: "Engine Calibration Data"
+    description: "Current engine calibration parameters and maps"
+    category: "calibration"
+    groups: ["calibration", "engine", "tuning"]
+    tags: ["calibration", "engine", "tuning", "parameters", "maps"]
+    
+    data:
+      calibration_id: "CAL-ENG-2024.1.0"
+      version: "2024.1.0"
+      calibration_date: "2024-01-15T10:30:00Z"
+      fuel_maps:
+        base_fuel_map: "BMF-001"
+        enrichment_map: "EMF-002"
+        cold_start_map: "CSM-003"
+      ignition_maps:
+        base_ignition_map: "BIM-001"
+        knock_retard_map: "KRM-002"
+        advance_map: "AM-003"
+      air_flow_maps:
+        maf_calibration: "MAF-001"
+        throttle_calibration: "TC-002"
+        idle_air_control: "IAC-003"
+      emission_maps:
+        egr_calibration: "EGR-001"
+        catalyst_heating: "CH-002"
+        lambda_control: "LC-003"
+      checksum: "b2c3d4e5f6a1"
+      validation_status: "valid"
+      
+    schema:
+      type: "object"
+      properties:
+        calibration_id:
+          type: "string"
+          description: "Unique calibration identifier"
+        version:
+          type: "string"
+          description: "Calibration version"
+        calibration_date:
+          type: "string"
+          format: "date-time"
+          description: "Calibration creation date"
+        fuel_maps:
+          type: "object"
+          properties:
+            base_fuel_map:
+              type: "string"
+              description: "Base fuel injection map ID"
+            enrichment_map:
+              type: "string"
+              description: "Fuel enrichment map ID"
+            cold_start_map:
+              type: "string"
+              description: "Cold start fuel map ID"
+          required: ["base_fuel_map", "enrichment_map", "cold_start_map"]
+        ignition_maps:
+          type: "object"
+          properties:
+            base_ignition_map:
+              type: "string"
+              description: "Base ignition timing map ID"
+            knock_retard_map:
+              type: "string"
+              description: "Knock retard map ID"
+            advance_map:
+              type: "string"
+              description: "Ignition advance map ID"
+          required: ["base_ignition_map", "knock_retard_map", "advance_map"]
+        air_flow_maps:
+          type: "object"
+          properties:
+            maf_calibration:
+              type: "string"
+              description: "Mass air flow sensor calibration ID"
+            throttle_calibration:
+              type: "string"
+              description: "Throttle position calibration ID"
+            idle_air_control:
+              type: "string"
+              description: "Idle air control calibration ID"
+          required: ["maf_calibration", "throttle_calibration", "idle_air_control"]
+        emission_maps:
+          type: "object"
+          properties:
+            egr_calibration:
+              type: "string"
+              description: "EGR system calibration ID"
+            catalyst_heating:
+              type: "string"
+              description: "Catalyst heating calibration ID"
+            lambda_control:
+              type: "string"
+              description: "Lambda control calibration ID"
+          required: ["egr_calibration", "catalyst_heating", "lambda_control"]
+        checksum:
+          type: "string"
+          description: "Calibration data checksum"
+        validation_status:
+          type: "string"
+          enum: ["valid", "invalid", "pending", "error"]
+          description: "Calibration validation status"
+      required: ["calibration_id", "version", "calibration_date", "fuel_maps", "ignition_maps", "air_flow_maps", "emission_maps", "checksum", "validation_status"]
+      
+  - id: "CalibrationStatus"
+    name: "Calibration Status"
+    description: "Current status of engine calibration system"
+    category: "calibration"
+    groups: ["calibration", "status", "monitoring"]
+    tags: ["calibration", "status", "monitoring", "engine"]
+    
+    data:
+      status: "active"
+      last_update: "2024-01-20T14:30:15.123Z"
+      calibration_mode: "production"
+      adaptation_active: true
+      learning_enabled: true
+      fault_count: 0
+      validation_passed: true
+      performance_index: 95.5
+      
+    schema:
+      type: "object"
+      properties:
+        status:
+          type: "string"
+          enum: ["active", "inactive", "error", "maintenance"]
+          description: "Current calibration status"
+        last_update:
+          type: "string"
+          format: "date-time"
+          description: "Last calibration update timestamp"
+        calibration_mode:
+          type: "string"
+          enum: ["production", "development", "testing", "maintenance"]
+          description: "Current calibration mode"
+        adaptation_active:
+          type: "boolean"
+          description: "Whether adaptation is currently active"
+        learning_enabled:
+          type: "boolean"
+          description: "Whether learning is enabled"
+        fault_count:
+          type: "number"
+          minimum: 0
+          description: "Number of calibration-related faults"
+        validation_passed:
+          type: "boolean"
+          description: "Whether calibration validation passed"
+        performance_index:
+          type: "number"
+          minimum: 0
+          maximum: 100
+          description: "Calibration performance index (0-100)"
+      required: ["status", "last_update", "calibration_mode", "adaptation_active", "learning_enabled", "fault_count", "validation_passed", "performance_index"]
+
+  # Example: multiple HTTP responses (round-robin on each GET .../data/RoundRobinDemo)
+  - id: "RoundRobinDemo"
+    name: "Round-robin demo data resource"
+    description: "Cycles 200 -> 503 -> 201 on each GET"
+    category: "demo"
+    tags: ["demo", "round-robin"]
+    data:
+      value: "list-view-default"
+      note: "Used for GET .../data collection only"
+    schema:
+      type: "object"
+      properties:
+        value: { type: "string" }
+    responses:
+      - status: 200
+        body:
+          id: "RoundRobinDemo"
+          name: "Round-robin demo data resource"
+          data:
+            value: "ok"
+            step: 1
+          schema:
+            type: "object"
+          tags: ["demo"]
+      - status: 503
+        body:
+          error: "Service unavailable"
+          code: "DEMO_RETRY"
+      - status: 201
+        body:
+          id: "RoundRobinDemo"
+          name: "Round-robin demo data resource"
+          data:
+            value: "created"
+            step: 3
+          tags: ["demo"]

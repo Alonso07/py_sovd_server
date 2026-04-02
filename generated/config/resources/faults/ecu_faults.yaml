@@ -65,3 +65,21 @@ faults:
     scope: "performance"
     status: "inactive"
     tags: ["performance", "ecu", "warning", "system"]
+
+  - id: "ECU-RR"
+    name: "Round-robin demo fault"
+    description: "Cycles HTTP status/body on each GET .../faults/ECU-RR"
+    severity: "warning"
+    scope: "system"
+    status: "inactive"
+    tags: ["demo", "round-robin"]
+    responses:
+      - status: 200
+        body:
+          demo: "fault-step-a"
+      - status: 404
+        body:
+          error: "fault-not-found-demo"
+      - status: 200
+        body:
+          demo: "fault-step-c"

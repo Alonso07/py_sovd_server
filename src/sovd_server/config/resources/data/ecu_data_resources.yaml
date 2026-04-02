@@ -468,3 +468,40 @@ data_resources:
           maximum: 100
           description: "Calibration performance index (0-100)"
       required: ["status", "last_update", "calibration_mode", "adaptation_active", "learning_enabled", "fault_count", "validation_passed", "performance_index"]
+
+  # Example: multiple HTTP responses (round-robin on each GET .../data/RoundRobinDemo)
+  - id: "RoundRobinDemo"
+    name: "Round-robin demo data resource"
+    description: "Cycles 200 -> 503 -> 201 on each GET"
+    category: "demo"
+    tags: ["demo", "round-robin"]
+    data:
+      value: "list-view-default"
+      note: "Used for GET .../data collection only"
+    schema:
+      type: "object"
+      properties:
+        value: { type: "string" }
+    responses:
+      - status: 200
+        body:
+          id: "RoundRobinDemo"
+          name: "Round-robin demo data resource"
+          data:
+            value: "ok"
+            step: 1
+          schema:
+            type: "object"
+          tags: ["demo"]
+      - status: 503
+        body:
+          error: "Service unavailable"
+          code: "DEMO_RETRY"
+      - status: 201
+        body:
+          id: "RoundRobinDemo"
+          name: "Round-robin demo data resource"
+          data:
+            value: "created"
+            step: 3
+          tags: ["demo"]

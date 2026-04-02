@@ -7,7 +7,8 @@ Uses YAML configuration files to provide real data for endpoints
 import os
 import sys
 import logging
-from flask import Flask, jsonify, request
+from typing import Optional
+from flask import Flask, jsonify, make_response, request
 from flask_cors import CORS
 from datetime import datetime
 import json
@@ -18,8 +19,24 @@ sys.path.insert(0, current_dir)
 
 try:
     from .config_loader import config_loader
+    from .resource_response import (
+        data_for_list_view,
+        pick_data_resource_response,
+        pick_fault_response,
+        pick_mode_response,
+        pick_operation_response,
+    )
+    from . import update_runtime
 except ImportError:
     from config_loader import config_loader
+    from resource_response import (
+        data_for_list_view,
+        pick_data_resource_response,
+        pick_fault_response,
+        pick_mode_response,
+        pick_operation_response,
+    )
+    import update_runtime
 
 # Add the generated server to the path
 generated_path = os.path.join(os.path.dirname(__file__), "..", "..", "generated")
@@ -48,6 +65,36 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 CORS(app)
+
+
+def _base_url() -> str:
+    return request.url_root.rstrip("/")
+
+
+def _public_update_package(pkg: dict) -> dict:
+    """Drop YAML-only keys not meant for API clients."""
+    if not pkg:
+        return {}
+    skip = {"list_only", "resolves_to"}
+    return {k: v for k, v in pkg.items() if k not in skip}
+
+
+def _update_detail(package_id: str) -> Optional[dict]:
+    """Resolved update package for GET /updates/{id} (autonomous -> resolves_to)."""
+    pkg = config_loader.get_update_package_by_id(package_id)
+    reg = update_runtime.get_registered(package_id)
+    if reg is not None:
+        merged = dict(reg)
+        if pkg:
+            merged = {**_public_update_package(pkg), **merged}
+        return merged
+    if not pkg:
+        return None
+    if pkg.get("id") == "autonomous" and pkg.get("resolves_to"):
+        resolved = config_loader.get_update_package_by_id(pkg["resolves_to"])
+        if resolved:
+            return _public_update_package(resolved)
+    return _public_update_package(pkg)
 
 # Load configuration
 config_loader.load_all_configs()
@@ -117,6 +164,135 @@ def get_entities(entity_collection):
         return jsonify({"error": str(e)}), 500
 
 
+# --- Software updates (ISO/DIS 17978-3 §7.18) — must be registered before generic /{entity_path} ---
+
+
+@app.route("/updates", methods=["GET"])
+def updates_list():
+    """GET /updates — aggregate package ids from YAML + runtime registrations."""
+    try:
+        items = list(config_loader.get_all_update_package_ids())
+        for rid in update_runtime.list_registered_ids():
+            if rid not in items:
+                items.append(rid)
+        return jsonify({"items": items})
+    except Exception as e:
+        logger.error(f"Error listing updates: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/updates", methods=["POST"])
+def updates_register():
+    """POST /updates — register a package (body must include id)."""
+    try:
+        body = request.get_json(silent=True) or {}
+        uid = body.get("id")
+        if not uid:
+            return jsonify({"error": "id is required"}), 400
+        update_runtime.register_package(uid, body)
+        loc = f"{_base_url()}/updates/{uid}"
+        resp = make_response(jsonify({"id": uid}), 201)
+        resp.headers["Location"] = loc
+        return resp
+    except Exception as e:
+        logger.error(f"Error registering update: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/updates/<update_package_id>", methods=["GET"])
+def updates_get_detail(update_package_id):
+    detail = _update_detail(update_package_id)
+    if detail is None:
+        return jsonify({"error": "Update package not found"}), 404
+    return jsonify(detail)
+
+
+@app.route("/updates/<update_package_id>", methods=["DELETE"])
+def updates_delete(update_package_id):
+    pkg = config_loader.get_update_package_by_id(update_package_id)
+    if pkg and pkg.get("list_only"):
+        return "", 405
+    if update_runtime.delete_registered(update_package_id):
+        return "", 204
+    if pkg:
+        return "", 204
+    return jsonify({"error": "Update package not found"}), 404
+
+
+def _updates_accepted_response(update_package_id: str):
+    loc = f"{_base_url()}/updates/{update_package_id}/status"
+    resp = make_response("", 202)
+    resp.headers["Location"] = loc
+    return resp
+
+
+@app.route("/updates/<update_package_id>/automated", methods=["PUT"])
+def updates_put_automated(update_package_id):
+    if _update_detail(update_package_id) is None:
+        return jsonify({"error": "Update package not found"}), 404
+    pkg = config_loader.get_update_package_by_id(update_package_id)
+    if pkg and not pkg.get("automated", False):
+        return jsonify(
+            {
+                "error_code": "update-automated-not-supported",
+                "message": "The package cannot be installed automatically",
+            }
+        ), 409
+    update_runtime.set_status(
+        update_package_id,
+        {"phase": "execute", "status": "inProgress", "progress": 0},
+    )
+    return _updates_accepted_response(update_package_id)
+
+
+@app.route("/updates/<update_package_id>/prepare", methods=["PUT"])
+def updates_put_prepare(update_package_id):
+    if _update_detail(update_package_id) is None:
+        return jsonify({"error": "Update package not found"}), 404
+    update_runtime.set_status(
+        update_package_id,
+        {"phase": "prepare", "status": "inProgress", "progress": 0},
+    )
+    return _updates_accepted_response(update_package_id)
+
+
+@app.route("/updates/<update_package_id>/execute", methods=["PUT"])
+def updates_put_execute(update_package_id):
+    if _update_detail(update_package_id) is None:
+        return jsonify({"error": "Update package not found"}), 404
+    update_runtime.set_status(
+        update_package_id,
+        {"phase": "execute", "status": "inProgress", "progress": 0},
+    )
+    return _updates_accepted_response(update_package_id)
+
+
+@app.route("/updates/<update_package_id>/status", methods=["GET"])
+def updates_get_status(update_package_id):
+    if _update_detail(update_package_id) is None:
+        return jsonify({"error": "Update package not found"}), 404
+    defaults = {
+        "phase": "execute",
+        "status": "completed",
+        "progress": 100,
+    }
+    body = update_runtime.merge_status(update_package_id, defaults)
+    return jsonify(body)
+
+
+@app.route("/<path:entity_path>/updates", methods=["GET"])
+def entity_updates_list(entity_path):
+    """Entity-scoped update id list (ISO allows /updates under an Entity)."""
+    try:
+        if not entity_path.startswith("/"):
+            entity_path = "/" + entity_path
+        items = [p.get("id") for p in config_loader.get_update_packages(entity_path) if p.get("id")]
+        return jsonify({"items": items})
+    except Exception as e:
+        logger.error(f"Error listing entity updates: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/<path:entity_path>", methods=["GET"])
 def entity_capabilities(entity_path):
     """Get capabilities of an Entity"""
@@ -144,7 +320,7 @@ def entity_capabilities(entity_path):
             logger.error(f"Entity not found: {entity_path}")
             return jsonify({"error": "Entity not found"}), 404
 
-        # Create capabilities response
+        # Create capabilities response (include updates URI when configured)
         capabilities = EntityCapabilities(
             id=entity["id"],
             name=entity["name"],
@@ -155,9 +331,12 @@ def entity_capabilities(entity_path):
             configurations=entity["endpoints"]["configurations"],
             modes=entity["endpoints"]["modes"],
         )
+        cap_dict = capabilities.to_dict()
+        if entity.get("endpoints", {}).get("updates"):
+            cap_dict["updates"] = entity["endpoints"]["updates"]
 
         logger.info(f"Entity capabilities requested for: {entity_path}")
-        return jsonify(capabilities.to_dict())
+        return jsonify(cap_dict)
     except Exception as e:
         logger.error(f"Error getting entity capabilities for {entity_path}: {e}")
         return jsonify({"error": str(e)}), 500
@@ -193,7 +372,7 @@ def data_resources(entity_path):
                 data_resource = DataResource(
                     id=resource_data["id"],
                     name=resource_data["name"],
-                    data=resource_data["data"],
+                    data=data_for_list_view(resource_data),
                     _schema=resource_data.get("schema"),
                     tags=resource_data.get("tags", []),
                 )
@@ -221,16 +400,9 @@ def data_resource(entity_path, data_id):
         if not resource_data:
             return jsonify({"error": "Data resource not found"}), 404
 
-        data_resource = DataResource(
-            id=resource_data["id"],
-            name=resource_data["name"],
-            data=resource_data["data"],
-            _schema=resource_data.get("schema"),
-            tags=resource_data.get("tags", []),
-        )
-
-        logger.info(f"Data resource requested: {entity_path}/{data_id}")
-        return jsonify(data_resource.to_dict())
+        status, body = pick_data_resource_response(entity_path, resource_data)
+        logger.info(f"Data resource requested: {entity_path}/{data_id} -> HTTP {status}")
+        return jsonify(body), status
     except Exception as e:
         logger.error(f"Error getting data resource {data_id} for {entity_path}: {e}")
         return jsonify({"error": str(e)}), 500
@@ -326,22 +498,33 @@ def start_operation_execution(entity_path, operation_id):
         # Generate execution ID
         execution_id = f"exec_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{operation_id}"
 
-        # Return appropriate response based on operation type
-        if operation_data.get("execution", {}).get("type") == "asynchronous":
-            response = operation_data.get("response_success", {}).copy()
-            response["execution_id"] = execution_id
-            response["timestamp"] = datetime.now().isoformat() + "Z"
-        else:
-            response = operation_data.get("response_success", {}).copy()
-            response["execution_id"] = execution_id
-            response["timestamp"] = datetime.now().isoformat() + "Z"
+        status, response = pick_operation_response(entity_path, operation_data)
+        response = dict(response)
+        response["execution_id"] = execution_id
+        response["timestamp"] = datetime.now().isoformat() + "Z"
 
         logger.info(
-            f"Operation execution started: {entity_path}/{operation_id} (ID: {execution_id})"
+            f"Operation execution started: {entity_path}/{operation_id} (ID: {execution_id}) -> HTTP {status}"
         )
-        return jsonify(response)
+        return jsonify(response), status
     except Exception as e:
         logger.error(f"Error starting operation {operation_id} for {entity_path}: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/<path:entity_path>/faults/<fault_code>", methods=["GET"])
+def fault_by_code(entity_path, fault_code):
+    """Get a single fault by code (optional ``responses`` round-robin)."""
+    try:
+        if not entity_path.startswith("/"):
+            entity_path = "/" + entity_path
+        fault_data = config_loader.get_fault(entity_path, fault_code)
+        if not fault_data:
+            return jsonify({"error": "Fault not found"}), 404
+        status, body = pick_fault_response(entity_path, fault_data)
+        return jsonify(body), status
+    except Exception as e:
+        logger.error(f"Error getting fault {fault_code} for {entity_path}: {e}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -387,6 +570,22 @@ def faults(entity_path):
         return jsonify(collection.to_dict())
     except Exception as e:
         logger.error(f"Error getting faults for {entity_path}: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/<path:entity_path>/modes/<mode_id>", methods=["GET"])
+def mode_by_id(entity_path, mode_id):
+    """Get a single mode by id (optional ``responses`` round-robin)."""
+    try:
+        if not entity_path.startswith("/"):
+            entity_path = "/" + entity_path
+        mode_data = config_loader.get_mode(entity_path, mode_id)
+        if not mode_data:
+            return jsonify({"error": "Mode not found"}), 404
+        status, body = pick_mode_response(entity_path, mode_data)
+        return jsonify(body), status
+    except Exception as e:
+        logger.error(f"Error getting mode {mode_id} for {entity_path}: {e}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -453,7 +652,11 @@ if __name__ == "__main__":
     print("  GET /{entity-path}/operations/{operation_id} - Get specific operation")
     print("  POST /{entity-path}/operations/{operation_id} - Start operation execution")
     print("  GET /{entity-path}/faults - Get faults")
+    print("  GET /{entity-path}/faults/{fault_code} - Get fault by code")
     print("  GET /{entity-path}/modes - Get modes")
+    print("  GET /{entity-path}/modes/{mode_id} - Get mode by id")
+    print("  GET /updates - List software update packages")
+    print("  GET /{entity-path}/updates - List updates for an entity")
     print("  GET /health - Health check")
     print(f"\nServer running on http://{host}:{port}")
 

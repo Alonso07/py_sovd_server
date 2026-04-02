@@ -117,3 +117,25 @@ operations:
       status: "error"
       message: "Parameter write failed"
       error_code: "PARAMETER_WRITE_FAILED"
+
+  # Round-robin HTTP responses on each POST (cycles 200 -> 409 -> 200)
+  - id: "ECU-RR-DEMO"
+    name: "Round-robin response demo"
+    description: "Demonstrates multiple status/body responses per operation"
+    tags: ["demo"]
+    execution:
+      type: "synchronous"
+      timeout: 5
+    responses:
+      - status: 200
+        body:
+          status: "success"
+          message: "step A"
+      - status: 409
+        body:
+          status: "conflict"
+          message: "step B"
+      - status: 200
+        body:
+          status: "success"
+          message: "step C"

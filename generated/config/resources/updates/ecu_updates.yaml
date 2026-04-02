@@ -1,0 +1,34 @@
+# Software update packages (ISO/DIS 17978-3 §7.18)
+# Referenced from entity resources.updates in components.yaml
+
+update_packages:
+  # Special entry: resolved by the server to a concrete package id (ISO §7.18.1.4)
+  - id: autonomous
+    update_name: "Autonomous update resolution"
+    list_only: true
+    resolves_to: "ECU-FW-2025-04"
+    notes: "Not installable by id; GET /updates/autonomous returns details for resolves_to"
+
+  - id: "ECU-FW-2025-04"
+    update_name: "Engine ECU firmware April 2025"
+    automated: true
+    origins:
+      - remote
+      - proximity
+    preconditions: "vehicle_parked"
+    duration: 900
+    size: 247000
+    updated_components:
+      - "/components/engine/ecu"
+    affected_components:
+      - "/components/engine/ecu"
+
+  - id: "ECU-CAL-v3"
+    update_name: "ECU calibration bundle"
+    automated: false
+    origins:
+      - proximity
+    duration: 120
+    size: 8192
+    updated_components:
+      - "/components/engine/ecu"

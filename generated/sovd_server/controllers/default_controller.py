@@ -5,11 +5,12 @@ from typing import Union
 
 from sovd_server.models.configuration import Configuration  # noqa: E501
 from sovd_server.models.configuration_write import ConfigurationWrite  # noqa: E501
-# from sovd_server.models.configuration_write_multipart import ConfigurationWriteMultipart  # noqa: E501
+from sovd_server.models.configuration_write_multipart import ConfigurationWriteMultipart  # noqa: E501
 from sovd_server.models.cyclic_subscription import CyclicSubscription  # noqa: E501
 from sovd_server.models.cyclic_subscription_collection import CyclicSubscriptionCollection  # noqa: E501
 from sovd_server.models.cyclic_subscription_create import CyclicSubscriptionCreate  # noqa: E501
 from sovd_server.models.cyclic_subscription_update import CyclicSubscriptionUpdate  # noqa: E501
+from sovd_server.models.data_error import DataError  # noqa: E501
 from sovd_server.models.data_list import DataList  # noqa: E501
 from sovd_server.models.data_list_collection import DataListCollection  # noqa: E501
 from sovd_server.models.data_list_create import DataListCreate  # noqa: E501
@@ -21,6 +22,7 @@ from sovd_server.models.entity_collection import EntityCollection  # noqa: E501
 from sovd_server.models.execution_collection import ExecutionCollection  # noqa: E501
 from sovd_server.models.fault import Fault  # noqa: E501
 from sovd_server.models.fault_collection import FaultCollection  # noqa: E501
+from sovd_server.models.generic_error import GenericError  # noqa: E501
 from sovd_server.models.mode import Mode  # noqa: E501
 from sovd_server.models.mode_collection import ModeCollection  # noqa: E501
 from sovd_server.models.mode_set import ModeSet  # noqa: E501
@@ -38,6 +40,10 @@ from sovd_server.models.trigger import Trigger  # noqa: E501
 from sovd_server.models.trigger_collection import TriggerCollection  # noqa: E501
 from sovd_server.models.trigger_create import TriggerCreate  # noqa: E501
 from sovd_server.models.trigger_update import TriggerUpdate  # noqa: E501
+from sovd_server.models.update_package import UpdatePackage  # noqa: E501
+from sovd_server.models.update_package_id_list import UpdatePackageIdList  # noqa: E501
+from sovd_server.models.update_register_response import UpdateRegisterResponse  # noqa: E501
+from sovd_server.models.update_status import UpdateStatus  # noqa: E501
 from sovd_server.models.version_info import VersionInfo  # noqa: E501
 from sovd_server import util
 
@@ -163,6 +169,19 @@ def delete_trigger(entity_path, trigger_id):  # noqa: E501
     :type entity_path: str
     :param trigger_id: Trigger identifier
     :type trigger_id: str
+
+    :rtype: Union[None, Tuple[None, int], Tuple[None, int, Dict[str, str]]
+    """
+    return 'do some magic!'
+
+
+def delete_update_package(update_package_id):  # noqa: E501
+    """Delete update package
+
+    Deletes an update package not in execute phase (ISO/DIS 17978-3 §7.18.8). # noqa: E501
+
+    :param update_package_id: Software update package identifier (ISO/DIS 17978-3 §7.18)
+    :type update_package_id: str
 
     :rtype: Union[None, Tuple[None, int], Tuple[None, int, Dict[str, str]]
     """
@@ -307,49 +326,7 @@ def get_entities(entity_collection, tags=None):  # noqa: E501
 
     :rtype: Union[EntityCollection, Tuple[EntityCollection, int], Tuple[EntityCollection, int, Dict[str, str]]
     """
-    from sovd_server.models.entity_collection import EntityCollection
-    from sovd_server.models.entity_reference import EntityReference
-    
-    # Create a simple mock response
-    entities = []
-    if entity_collection == "areas":
-        entities = [
-            EntityReference(
-                id="/engine",
-                name="Engine Area",
-                href="/engine",
-                tags=["diagnostics", "engine"]
-            ),
-            EntityReference(
-                id="/transmission", 
-                name="Transmission Area",
-                href="/transmission",
-                tags=["diagnostics", "transmission"]
-            )
-        ]
-    elif entity_collection == "components":
-        entities = [
-            EntityReference(
-                id="/engine/ecu",
-                name="Engine Control Unit",
-                href="/engine/ecu",
-                tags=["ecu", "engine", "control"]
-            )
-        ]
-    elif entity_collection == "apps":
-        entities = [
-            EntityReference(
-                id="/diagnostics",
-                name="Diagnostics App",
-                href="/diagnostics",
-                tags=["app", "diagnostics"]
-            )
-        ]
-    
-    collection = EntityCollection(
-        items=entities
-    )
-    return collection
+    return 'do some magic!'
 
 
 def get_entity_capabilities(entity_path, include_schema=None):  # noqa: E501
@@ -604,6 +581,49 @@ def get_triggers(entity_path):  # noqa: E501
     return 'do some magic!'
 
 
+def get_update_package(update_package_id, include_schema=None):  # noqa: E501
+    """Retrieve details of an update package
+
+    Returns detailed information for an update package (ISO/DIS 17978-3 §7.18.3). # noqa: E501
+
+    :param update_package_id: Software update package identifier (ISO/DIS 17978-3 §7.18)
+    :type update_package_id: str
+    :param include_schema: Include JSON schema in response
+    :type include_schema: bool
+
+    :rtype: Union[UpdatePackage, Tuple[UpdatePackage, int], Tuple[UpdatePackage, int, Dict[str, str]]
+    """
+    return 'do some magic!'
+
+
+def get_update_status(update_package_id):  # noqa: E501
+    """Read status of an update
+
+    Returns preparation or execution status (ISO/DIS 17978-3 §7.18.7). # noqa: E501
+
+    :param update_package_id: Software update package identifier (ISO/DIS 17978-3 §7.18)
+    :type update_package_id: str
+
+    :rtype: Union[UpdateStatus, Tuple[UpdateStatus, int], Tuple[UpdateStatus, int, Dict[str, str]]
+    """
+    return 'do some magic!'
+
+
+def get_updates(target_version=None, origin=None):  # noqa: E501
+    """Query for software updates
+
+    Returns available update packages for the SOVD server (ISO/DIS 17978-3:2025 §7.18.2). An Entity may also expose &#x60;/updates&#x60; under its path for scoped updates.  # noqa: E501
+
+    :param target_version: Requested target version or pattern
+    :type target_version: str
+    :param origin: Update origin (remote, proximity, or custom x-*)
+    :type origin: str
+
+    :rtype: Union[UpdatePackageIdList, Tuple[UpdatePackageIdList, int], Tuple[UpdatePackageIdList, int, Dict[str, str]]
+    """
+    return 'do some magic!'
+
+
 def get_version_info():  # noqa: E501
     """Read all supported versions of the SOVD server
 
@@ -612,20 +632,7 @@ def get_version_info():  # noqa: E501
 
     :rtype: Union[VersionInfo, Tuple[VersionInfo, int], Tuple[VersionInfo, int, Dict[str, str]]
     """
-    from sovd_server.models.version_info import VersionInfo
-    from sovd_server.models.version import Version
-    
-    # Create a simple version info response
-    version = Version(
-        version="1.0.0",
-        status="stable",
-        accessurl="http://localhost:8080"
-    )
-    
-    version_info = VersionInfo(
-        versions=[version]
-    )
-    return version_info
+    return 'do some magic!'
 
 
 def modify_operation_execution(entity_path, operation_id, execution_id, body):  # noqa: E501
@@ -647,6 +654,59 @@ def modify_operation_execution(entity_path, operation_id, execution_id, body):  
     operation_execution_modify = body
     if connexion.request.is_json:
         operation_execution_modify = OperationExecutionModify.from_dict(connexion.request.get_json())  # noqa: E501
+    return 'do some magic!'
+
+
+def put_update_automated(update_package_id):  # noqa: E501
+    """Automated installation of an update
+
+    Starts automated installation (ISO/DIS 17978-3 §7.18.4). Returns Location for status. # noqa: E501
+
+    :param update_package_id: Software update package identifier (ISO/DIS 17978-3 §7.18)
+    :type update_package_id: str
+
+    :rtype: Union[None, Tuple[None, int], Tuple[None, int, Dict[str, str]]
+    """
+    return 'do some magic!'
+
+
+def put_update_execute(update_package_id):  # noqa: E501
+    """Execute installation of an update
+
+    Executes installation and activation (ISO/DIS 17978-3 §7.18.6). # noqa: E501
+
+    :param update_package_id: Software update package identifier (ISO/DIS 17978-3 §7.18)
+    :type update_package_id: str
+
+    :rtype: Union[None, Tuple[None, int], Tuple[None, int, Dict[str, str]]
+    """
+    return 'do some magic!'
+
+
+def put_update_prepare(update_package_id):  # noqa: E501
+    """Prepare installation of an update
+
+    Starts preparation of the update package (ISO/DIS 17978-3 §7.18.5). # noqa: E501
+
+    :param update_package_id: Software update package identifier (ISO/DIS 17978-3 §7.18)
+    :type update_package_id: str
+
+    :rtype: Union[None, Tuple[None, int], Tuple[None, int, Dict[str, str]]
+    """
+    return 'do some magic!'
+
+
+def register_update(body):  # noqa: E501
+    """Register an update package
+
+    Registers a new update package at the SOVD server (ISO/DIS 17978-3 §7.18.9). # noqa: E501
+
+    :param request_body: 
+    :type request_body: Dict[str, ]
+
+    :rtype: Union[UpdateRegisterResponse, Tuple[UpdateRegisterResponse, int], Tuple[UpdateRegisterResponse, int, Dict[str, str]]
+    """
+    request_body = body
     return 'do some magic!'
 
 
@@ -830,7 +890,7 @@ def update_cyclic_subscription(entity_path, subscription_id, body):  # noqa: E50
 def update_data_resource(entity_path, data_id, body):  # noqa: E501
     """Write a data resource
 
-    Updates the value of a specific data resource # noqa: E501
+    Writes the value of a data resource (ISO/DIS 17978-3:2025 §7.9.6). Only a single resource can be written per request. Success returns 204 No Content with no body.  # noqa: E501
 
     :param entity_path: Path to the Entity
     :type entity_path: str
@@ -839,7 +899,7 @@ def update_data_resource(entity_path, data_id, body):  # noqa: E501
     :param data_resource_write: 
     :type data_resource_write: dict | bytes
 
-    :rtype: Union[DataResource, Tuple[DataResource, int], Tuple[DataResource, int, Dict[str, str]]
+    :rtype: Union[None, Tuple[None, int], Tuple[None, int, Dict[str, str]]
     """
     data_resource_write = body
     if connexion.request.is_json:

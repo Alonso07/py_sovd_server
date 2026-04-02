@@ -60,6 +60,21 @@ Fault definitions with severity and diagnostic information.
 #### Modes
 Operation modes with capabilities and limitations.
 
+#### Software updates (`config/resources/updates/*.yaml`)
+Defines update packages for **GET /updates**, **GET /updates/{id}**, and related flows (ISO 17978-3 §7.18). Reference files from an entity under `resources.updates`, and add `endpoints.updates` (e.g. `"/engine/ecu/updates"`). Each file lists `update_packages` with `id`, `update_name`, `automated`, `origins`, `size`, `duration`, component URIs, etc. Optional entries: `list_only: true` (e.g. `autonomous`), `resolves_to` (concrete id for the autonomous stub).
+
+#### Multiple HTTP responses (round-robin)
+
+For **data resources** (`GET /{entity}/data/{id}`) and **operations** (`POST /{entity}/operations/{id}`), you can define a `responses` list instead of relying only on the default single 200 response:
+
+- Each item has `status` (HTTP status code) and `body` (JSON object returned to the client).
+- On each request, the server **cycles** through the list in order (round-robin) and wraps to the first item after the last.
+- Counters are per **entity path + resource id** (so `/engine/ecu` + `RoundRobinDemo` is independent from other entities).
+
+If `responses` is **omitted**, behavior is unchanged: data resources return a single 200 with the usual `id`, `name`, `data`, `schema`, `tags`; operations use `response_success` for a single 200.
+
+For `GET /{entity}/data` (collection), each item still needs a payload for the list: keep a top-level `data` field, or the first response’s `body.data` (or `body`) is used when `data` is missing.
+
 ## Configuration Examples
 
 ### Data Resource Example
@@ -86,6 +101,44 @@ operations:
       calibration_type:
         type: "string"
         enum: ["automatic", "manual", "advanced"]
+```
+
+### Round-robin responses example
+
+**Data resource** — each `GET` cycles `200 → 503 → 201 → …`:
+
+```yaml
+data_resources:
+  - id: "MyResource"
+    name: "Example"
+    data:
+      value: "used-in-collection-list"
+    responses:
+      - status: 200
+        body:
+          id: "MyResource"
+          name: "Example"
+          data: { value: "first" }
+      - status: 503
+        body: { error: "temporary", code: "BUSY" }
+      - status: 201
+        body:
+          id: "MyResource"
+          data: { value: "created" }
+```
+
+**Operation** — each `POST` cycles through the list; `execution_id` and `timestamp` are still added by the server:
+
+```yaml
+operations:
+  - id: "MyOp"
+    name: "Example"
+    execution: { type: "synchronous", timeout: 30 }
+    responses:
+      - status: 200
+        body: { status: "success", message: "A" }
+      - status: 409
+        body: { status: "conflict", message: "B" }
 ```
 
 ## Troubleshooting
