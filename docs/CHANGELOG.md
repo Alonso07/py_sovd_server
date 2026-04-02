@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-04-01
+
+### Added
+- Optional YAML `responses` lists (round-robin HTTP status/body) for **single-resource** `GET` on faults (`/{entity}/faults/{fault_code}`) and modes (`/{entity}/modes/{mode_id}`), consistent with data resources and operations.
+- Unit tests (`tests/test_resource_response.py`) and Flask end-to-end tests (`tests/test_e2e_enhanced_round_robin.py`) for round-robin behavior.
+- **python-semantic-release** configuration in `pyproject.toml`; **Semantic release** job in CI on `main` after tests pass; **publish-pypi** workflow on tags `v*` using repository secret `PYPI_TOKEN`.
+
+### Changed
+- `src/sovd_server/__init__.py` `__version__` kept in sync with `pyproject.toml` for releases.
+- Documentation updated for round-robin faults/modes, CI (semantic-release, PyPI on tags), and contributor workflows.
+
 ## [1.0.1] - 2025-03-16
 
 ### Changed

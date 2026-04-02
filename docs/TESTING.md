@@ -17,11 +17,13 @@ poetry run pytest tests/ --cov=sovd_server --cov-report=html
 # or: make run-tests
 ```
 
-### Specific Test Files
+### Specific test modules
 ```bash
 poetry run pytest tests/test_config.py -v
 poetry run pytest tests/test_endpoints.py -v
 poetry run pytest tests/test_server.py -v
+poetry run pytest tests/test_resource_response.py -v   # round-robin helpers (data, operations, faults, modes)
+poetry run pytest tests/test_e2e_enhanced_round_robin.py -v  # Flask test_client against enhanced server
 ```
 
 ### Testing multiple Python versions
@@ -44,35 +46,47 @@ poetry install   # includes dev deps (bandit, safety)
 make security    # writes reports to reports/bandit-report.json, reports/safety-report.json
 ```
 
-### Simulate CI locally
+### Match CI locally
 
 ```bash
 make ci-local     # lint, format-check, security, test
 ```
 
-## Test Structure
+**Black:** GitHub Actions runs `black --check` only on the paths listed in `.github/workflows/ci.yml` (a subset of `src/` plus all of `tests/`). The Makefile’s `format` / `format-check` targets run Black on **all** of `src/` and `tests/`. For an exact match to CI before pushing, use the same file list as in the workflow, or rely on the `Check code formatting` step in CI.
+
+**Commits that skip CI:** Pushes whose head commit message contains `[skip ci]` (for example automated version bumps) skip the lint/test jobs by design. See [VERSIONING.md](VERSIONING.md).
+
+## Test layout
 
 ```
 tests/
-├── test_config.py         # Configuration loading tests
-├── test_endpoints.py      # API endpoint tests
-├── test_server.py         # Server behavior tests
-├── test_server_config.py  # Server configuration tests
-├── test_default_controller.py
-└── debug_*.py             # Debug utilities (optional)
+├── test_config.py                    # Configuration loading
+├── test_endpoints.py                 # Smoke / import tests
+├── test_server.py                    # Server behavior
+├── test_server_config.py             # Server configuration
+├── test_resource_response.py         # Round-robin response selection (unit)
+├── test_e2e_enhanced_round_robin.py  # End-to-end: data, operations, faults, modes via Flask client
+├── test_default_controller.py        # Optional; generated OpenAPI (often ignored in CI)
+└── debug_*.py                        # Local debugging helpers (optional)
 ```
 
-## CI/CD
+## CI/CD (GitHub Actions)
 
-Tests run automatically on:
-- Push to `main` and `develop`
-- Pull requests targeting `main` and `develop`
+Workflow: `.github/workflows/ci.yml`.
 
-The CI workflow runs:
-- Linting (flake8)
-- Format check (black)
-- Security checks (bandit, safety)
-- Full test suite with coverage
+Triggers:
+
+- Push to `main` or `develop`
+- Pull requests targeting `main` or `develop`
+
+Jobs:
+
+- **quick-checks** — flake8, Black (subset of files), bandit, safety; skipped when the pushed commit message contains `[skip ci]`
+- **test** — pytest with coverage on Python 3.10–3.12 on Ubuntu, macOS, Windows; same `[skip ci]` rule
+- **build** — on `main` only, builds wheel/sdist with `scripts/build_resolve_symlinks.sh` (skipped with `[skip ci]`)
+- **semantic-release** — on `main` pushes only, after quick-checks and test succeed; runs **python-semantic-release** to bump version from conventional commits and push a tag (see [VERSIONING.md](VERSIONING.md))
+
+Publishing to PyPI when a **version tag** `v*` is pushed: `.github/workflows/publish-pypi.yml` (requires `PYPI_TOKEN` secret). Documented in [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ## Writing Tests
 

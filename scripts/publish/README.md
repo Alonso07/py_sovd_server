@@ -51,13 +51,18 @@ From the **project root** (requires [Poetry](https://python-poetry.org/)):
 ./scripts/publish/publish_to_pypi.sh
 ```
 
-Or do it manually:
+Or do it manually (use the **symlink build** so the wheel matches CI and PyPI workflows):
 
 ```bash
-poetry build
+chmod +x ./scripts/build_resolve_symlinks.sh
+./scripts/build_resolve_symlinks.sh build
 twine check dist/*
 twine upload dist/*                    # production PyPI
 # twine upload --repository testpypi dist/*   # Test PyPI only
 ```
+
+## Publishing from GitHub Actions
+
+When a **tag** like `v1.2.0` is pushed to GitHub, **`.github/workflows/publish-pypi.yml`** builds with the same script and uploads to PyPI if the repository secret **`PYPI_TOKEN`** is set. Version tags are usually created by **python-semantic-release** on merges to `main`; see [docs/VERSIONING.md](../../docs/VERSIONING.md) and [docs/DEPLOYMENT.md](../../docs/DEPLOYMENT.md).
 
 If you get **403 Forbidden**: your token may not have permission to create a new project. Create a token with scope **"Entire account"** or create the project name on PyPI first, then use a token scoped to that project.

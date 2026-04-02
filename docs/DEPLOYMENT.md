@@ -164,12 +164,12 @@ In CI you pass the token via the secret, e.g. `TWINE_PASSWORD: ${{ secrets.PYPI_
    # or: poetry self add twine  (if you prefer)
    ```
 
-3. **Build the package** (resolves symlinks so the wheel contains real files):
+3. **Build the package** (resolves symlinks so the wheel contains generated OpenAPI code as real files):
    ```bash
    make build
    # or: ./scripts/build_resolve_symlinks.sh build
    ```
-   This creates `dist/sovd_server-<version>.tar.gz` and `dist/sovd_server-<version>-py3-none-any.whl`.
+   Do **not** use plain `poetry build` alone for release artifacts; the script is required for a correct wheel. This creates `dist/sovd_server-<version>.tar.gz` and `dist/sovd_server-<version>-py3-none-any.whl`.
 
 4. **Check the archives** (optional):
    ```bash
@@ -207,64 +207,24 @@ In CI you pass the token via the secret, e.g. `TWINE_PASSWORD: ${{ secrets.PYPI_
 
 ### Publish to PyPI via GitHub Actions
 
-You can automate publishing so that pushing a version tag (e.g. `v1.0.0`) builds and uploads to PyPI. Configure the `PYPI_TOKEN` secret as above, then add a workflow like this (e.g. `.github/workflows/publish-pypi.yml`):
+The repository includes **`.github/workflows/publish-pypi.yml`**. It runs when a **version tag** matching `v*` is pushed (for example `v1.2.0` after **python-semantic-release** creates it on `main`).
 
-```yaml
-name: Publish to PyPI
+1. Create a PyPI API token at [pypi.org/manage/account/token/](https://pypi.org/manage/account/token/).
+2. In the GitHub repo: **Settings → Secrets and variables → Actions**, add **`PYPI_TOKEN`** with the token value (starts with `pypi-`).
+3. The workflow installs dependencies with Poetry, runs **`./scripts/build_resolve_symlinks.sh build`** (same as local releases), then uses [pypa/gh-action-pypi-publish](https://github.com/pypa/gh-action-pypi-publish) to upload `dist/*`.
 
-on:
-  release:
-    types: [published]
-  # Or trigger on tag push:
-  # push:
-  #   tags: [ 'v*' ]
-
-jobs:
-  publish:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v6
-
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.11'
-
-    - name: Install Poetry
-      uses: snok/install-poetry@v1
-      with:
-        version: 1.8.5
-        virtualenvs-create: true
-        virtualenvs-in-project: true
-
-    - name: Install twine
-      run: pip install twine
-
-    - name: Build package
-      run: poetry build
-
-    - name: Publish to PyPI
-      env:
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-      run: twine upload dist/*
-```
-
-- **Secret**: The workflow uses `secrets.PYPI_TOKEN` (same variable name as in the doip_server project).
-- **Trigger**: Either on **Release published** (create a release on the GitHub repo) or on **tag push** `v*`; adjust the `on:` block to match how you release.
+Tags are normally created automatically by the **Semantic release** job in **`.github/workflows/ci.yml`**; see [VERSIONING.md](VERSIONING.md). You can also push a tag manually after updating the version if needed.
 
 ## CI/CD (GitHub Actions)
 
-The repository includes:
+Workflows:
 
-- **`.github/workflows/ci.yml`**: On push/PR to `main`/`develop`:
-  - Lint (flake8), format check (black)
-  - Security (bandit, safety)
-  - Tests with coverage (pytest)
-  - Optional: build package (on main)
+| File | Role |
+|------|------|
+| **`ci.yml`** | On push/PR to `main`/`develop`: flake8; Black on the paths listed in the workflow; bandit; safety; pytest with coverage (matrix: Python 3.10–3.12, Ubuntu/macOS/Windows); on **`main`** only: package build artifact job; **semantic-release** after tests pass (conventional commits, version bump, tag push). Pushes whose message contains **`[skip ci]`** skip lint/test/build to avoid loops from release commits. |
+| **`publish-pypi.yml`** | On **`v*`** tag push: build with symlink resolution, publish to PyPI using **`PYPI_TOKEN`**. |
 
-The workflow uses **Poetry**: `poetry install` and `poetry run` for lint, test, and `poetry build` on main.
+All jobs use **Poetry** (`poetry install`, `poetry run`, …). The build uses the symlink script so generated OpenAPI code is copied into the package for wheels.
 
 ## System Service (systemd)
 

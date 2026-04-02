@@ -2,7 +2,7 @@
 
 This is the main index for all SOVD Server documentation.
 
-## 📚 Core Documentation
+## Core documentation
 
 ### [README.md](../README.md)
 Main project overview with quick start guide, features, and basic usage.
@@ -11,23 +11,23 @@ Main project overview with quick start guide, features, and basic usage.
 Configuration guide covering:
 - Gateway configuration (sovd_gateway.yaml)
 - Entity configurations (areas, components, apps)
-- Resource configurations (data, operations, faults, modes)
+- Resource configurations (data, operations, faults, modes, updates) and optional round-robin `responses`
 - Troubleshooting and best practices
 
 ### [TESTING.md](TESTING.md)
 Testing guide covering:
-- Test suite overview
+- Test suite overview (including round-robin / Flask e2e tests)
 - Running tests (unit, config, endpoints)
-- Test structure and CI
+- Test structure and CI (Black paths, `[skip ci]`)
 
 ### [DEPLOYMENT.md](DEPLOYMENT.md)
 Deployment and CI/CD guide including:
 - Local and production deployment
 - Docker deployment
-- GitHub Actions CI
-- Development workflow
+- GitHub Actions (lint, tests, **semantic release** on `main`, **PyPI** on version tags)
+- Manual PyPI publishing (`scripts/publish/`)
 
-## 🤝 Community & Project Management
+## Community and project management
 
 ### [CONTRIBUTING.md](CONTRIBUTING.md)
 Contributor guide including:
@@ -46,9 +46,9 @@ Project changelog and release notes.
 Security policy and vulnerability reporting.
 
 ### [VERSIONING.md](VERSIONING.md)
-How we version the project and cut releases (semver, pyproject.toml, tags).
+Semantic versioning, **python-semantic-release** on `main` (conventional commits), tags, and PyPI automation.
 
-## 🏗️ Configuration Structure
+## Configuration layout
 
 ```
 src/sovd_server/config/
@@ -61,10 +61,13 @@ src/sovd_server/config/
     ├── data/
     ├── operations/
     ├── faults/
-    └── modes/
+    ├── modes/
+    └── updates/
 ```
 
-## 🚀 Quick Start
+See [CONFIGURATION.md](CONFIGURATION.md) for **round-robin `responses`** on data, operations, faults, and modes.
+
+## Quick start
 
 ### Installation (Poetry)
 ```bash
@@ -109,8 +112,8 @@ make ci-local         # lint, format-check, security, test
 make version
 ```
 
-## 📖 Documentation Navigation
+## Documentation navigation
 
-- **Users**: Start with [README.md](../README.md) → [CONFIGURATION.md](CONFIGURATION.md)
-- **Developers**: [CONTRIBUTING.md](CONTRIBUTING.md) → [TESTING.md](TESTING.md)
-- **DevOps**: [DEPLOYMENT.md](DEPLOYMENT.md)
+- **Users**: Start with [README.md](../README.md) then [CONFIGURATION.md](CONFIGURATION.md)
+- **Developers**: [CONTRIBUTING.md](CONTRIBUTING.md) and [TESTING.md](TESTING.md)
+- **Releases / PyPI**: [VERSIONING.md](VERSIONING.md) and [DEPLOYMENT.md](DEPLOYMENT.md)

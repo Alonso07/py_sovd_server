@@ -1,6 +1,8 @@
 ## Description
 Please include a summary of the change and which issue is fixed. Include relevant motivation and context.
 
+Use [Conventional Commits](https://www.conventionalcommits.org/) in the PR title or merge commit when targeting `main` (for example `feat:`, `fix:`, `docs:`) so automated versioning can pick the right semver bump. See [docs/VERSIONING.md](../docs/VERSIONING.md).
+
 Fixes # (issue)
 
 ## Type of change

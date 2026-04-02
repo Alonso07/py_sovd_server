@@ -4,8 +4,9 @@ A **Service-Oriented Vehicle Data (SOVD)** server implementation based on **ISO/
 
 ## Features
 
-- **YAML-driven configuration** — Gateway, entities (areas, components, apps), and resources (data, operations, faults, modes) defined in YAML
-- **RESTful SOVD API** — Data resources, operations, faults, and modes with JSON responses
+- **YAML-driven configuration** — Gateway, entities (areas, components, apps), and resources (data, operations, faults, modes, updates) defined in YAML under `src/sovd_server/config/`
+- **RESTful SOVD API** — Collections and single-resource endpoints for data, operations, faults, and modes; software-update listings per ISO/DIS 17978-3 §7.18
+- **Optional multi-response (“round-robin”) behavior** — For selected resources you can list multiple HTTP `status`/`body` pairs in YAML; the server cycles them per entity path and resource id on each `GET`/`POST` (data, operations, faults, modes)
 - **No authentication** — Simplified setup for development and testing
 - **CORS enabled** — Ready for web and tool clients
 
@@ -41,17 +42,17 @@ Server runs at **http://127.0.0.1:8080** by default. Try:
 
 ```
 sovd_server/
-├── src/sovd_server/           # Main package
-│   ├── config/                # YAML configuration
-│   │   ├── sovd_gateway.yaml  # Gateway (host, port, logging)
-│   │   ├── entities/          # Areas, components, apps
-│   │   └── resources/         # Data, operations, faults, modes
+├── src/sovd_server/           # Main package (published wheel)
+│   ├── config/                # YAML configuration (runtime default)
 │   ├── config_loader.py       # YAML loader
-│   ├── enhanced_server.py     # Flask/Connexion server
+│   ├── enhanced_server.py     # Flask app (REST + capabilities)
+│   ├── resource_response.py   # Round-robin response helpers
 │   └── run_enhanced_server.py # CLI entry point
-├── tests/
-├── docs/                      # Additional documentation
-├── pyproject.toml              # Project and dependencies (Poetry)
+├── generated/                 # OpenAPI-generated models (symlinked into package for builds)
+├── tests/                     # pytest (unit + Flask client tests)
+├── .github/workflows/         # CI, semantic release, PyPI publish on tags
+├── docs/                      # Detailed guides
+├── pyproject.toml             # Project metadata (Poetry)
 ├── Makefile                   # Convenience commands
 └── README.md
 ```
@@ -77,17 +78,17 @@ All commands run via Poetry (e.g. `poetry run pytest`). You can also run tools d
 
 ```bash
 poetry run pytest tests/ -v
-poetry run black src/ tests/
+# Formatting: CI checks a subset of paths — use `make format-check` or match `.github/workflows/ci.yml`
 poetry run flake8 src/ tests/
 ```
 
 ## Configuration
 
-- **Gateway:** `src/sovd_server/config/sovd_gateway.yaml` — host, port, logging, entity/resource file paths
-- **Entities:** `config/entities/` — areas, components, applications
-- **Resources:** `config/resources/` — data, operations, faults, modes
+- **Gateway:** `src/sovd_server/config/sovd_gateway.yaml` — host, port, logging, entity index paths
+- **Entities:** `src/sovd_server/config/entities/` — areas, components, applications
+- **Resources:** `src/sovd_server/config/resources/` — data, operations, faults, modes, updates, etc.
 
-See [docs/](docs/INDEX.md) for detailed configuration and API notes.
+See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for round-robin `responses`, updates, and examples.
 
 ## API overview
 
@@ -96,11 +97,17 @@ See [docs/](docs/INDEX.md) for detailed configuration and API notes.
 | `GET /health` | Health check |
 | `GET /version-info` | Server version |
 | `GET /areas`, `/components`, `/apps` | List entities |
-| `GET /{entity}/data` | Data resources for an entity |
-| `GET /{entity}/data/{id}` | Single data resource |
-| `GET /{entity}/operations` | Operations |
-| `POST /{entity}/operations/{id}` | Execute operation |
-| `GET /{entity}/faults`, `GET /{entity}/modes` | Faults and modes |
+| `GET /{entity}` | Entity capabilities |
+| `GET /{entity}/data` | Data resource collection |
+| `GET /{entity}/data/{id}` | Single data resource (optional YAML `responses` round-robin) |
+| `GET /{entity}/operations` | Operations collection |
+| `GET /{entity}/operations/{id}` | Operation metadata |
+| `POST /{entity}/operations/{id}` | Execute operation (optional `responses` round-robin) |
+| `GET /{entity}/faults` | Fault collection |
+| `GET /{entity}/faults/{fault_code}` | Single fault (optional `responses` round-robin) |
+| `GET /{entity}/modes` | Mode collection |
+| `GET /{entity}/modes/{mode_id}` | Single mode (optional `responses` round-robin) |
+| `GET /updates`, `GET /{entity}/updates` | Software update package lists (ISO §7.18) |
 
 Example:
 
@@ -133,11 +140,11 @@ poetry run sovd-server
 ## Documentation
 
 - [docs/INDEX.md](docs/INDEX.md) — Documentation index
-- [docs/CONFIGURATION.md](docs/CONFIGURATION.md) — Configuration details
-- [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) — How to contribute
-- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — Deployment and PyPI publishing
-- [docs/TESTING.md](docs/TESTING.md) — Testing
-- [docs/VERSIONING.md](docs/VERSIONING.md) — Version and release process
+- [docs/CONFIGURATION.md](docs/CONFIGURATION.md) — YAML layout, round-robin `responses`, updates
+- [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) — How to contribute (including conventional commits for releases)
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — Deployment, Docker, CI/CD, PyPI
+- [docs/TESTING.md](docs/TESTING.md) — Running tests and matching CI locally
+- [docs/VERSIONING.md](docs/VERSIONING.md) — Semantic versioning, **python-semantic-release** on `main`, tags and PyPI
 
 ## License
 
