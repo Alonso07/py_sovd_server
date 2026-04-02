@@ -85,9 +85,10 @@ docker run -p 8080:8080 sovd-server
    - The script cleans, runs tests, builds with **Poetry** (`poetry build`), runs `twine check`, then prompts you to publish to **TestPyPI**, **PyPI**, or **Both**.  
    - Alternatively run manually: `poetry build` then `twine upload dist/*` (or `twine upload --repository testpypi dist/*`).
 
-2. **CI (optional)**  
-   - There is no deploy workflow in `.github/workflows/` by default.  
-   - If you add one (e.g. on tag `v*`), use `TWINE_USERNAME: __token__` and `TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}` so credentials stay in GitHub Secrets only.
+2. **CI (GitHub Actions)**  
+   - [.github/workflows/publish-pypi.yml](../.github/workflows/publish-pypi.yml) runs on **tag pushes** matching `v*` (e.g. `v1.2.0`), builds with `./scripts/build_resolve_symlinks.sh build`, and publishes with [pypa/gh-action-pypi-publish](https://github.com/pypa/gh-action-pypi-publish).  
+   - Set the repository secret **`PYPI_TOKEN`** to your PyPI API token (same value you would put in `TWINE_PASSWORD` locally).  
+   - Version tags are created automatically on `main` when conventional commits warrant a release; see [VERSIONING.md](VERSIONING.md).
 
 ### Where your PyPI credentials are stored
 

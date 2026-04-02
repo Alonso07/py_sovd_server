@@ -1,0 +1,40 @@
+# Builds the wheel/sdist and uploads to PyPI when a version tag is pushed (e.g. v1.2.0).
+# Repository secret: PYPI_API_TOKEN (PyPI → Account settings → API tokens).
+
+name: Publish to PyPI
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  publish:
+    name: Upload to PyPI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.8.5
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Install dependencies (runtime only)
+        run: poetry install --no-interaction --without dev
+
+      - name: Build distributions
+        run: chmod +x scripts/build_resolve_symlinks.sh && ./scripts/build_resolve_symlinks.sh build
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_TOKEN }}
