@@ -34,7 +34,7 @@ flake8 = "*"
 mypy = "*"
 bandit = "*"
 safety = "*"
-python-semantic-release = ">=9.0.0,<10"
+python-semantic-release = ">=9.0.0,<11"
 
 [tool.poetry.scripts]
 sovd-server = "sovd_server.run_enhanced_server:main"
