@@ -19,6 +19,8 @@ sys.path.insert(0, current_dir)
 
 try:
     from .config_loader import config_loader
+    from . import data_write_runtime
+    from . import execution_runtime
     from .fault_builder import (
         build_fault_reference,
         filter_faults_for_query,
@@ -34,6 +36,8 @@ try:
     from . import update_runtime
 except ImportError:
     from config_loader import config_loader
+    import data_write_runtime
+    import execution_runtime
     from fault_builder import (
         build_fault_reference,
         filter_faults_for_query,
@@ -76,6 +80,24 @@ CORS(app)
 
 def _base_url() -> str:
     return request.url_root.rstrip("/")
+
+
+def _norm_entity_path(entity_path: str) -> str:
+    if not entity_path.startswith("/"):
+        return "/" + entity_path
+    return entity_path
+
+
+def _with_data_override(entity_path: str, resource_data: dict) -> dict:
+    """Copy YAML resource dict; apply in-memory data overlay if present."""
+    out = dict(resource_data)
+    oid = resource_data.get("id")
+    if oid is None:
+        return out
+    ov = data_write_runtime.get_override(entity_path, oid)
+    if ov is not None:
+        out = {**out, "data": ov}
+    return out
 
 
 def _public_update_package(pkg: dict) -> dict:
@@ -384,12 +406,13 @@ def data_resources(entity_path):
             resources = resource_config.get("data_resources", [])
 
             for resource_data in resources:
+                effective = _with_data_override(entity_path, resource_data)
                 data_resource = DataResource(
-                    id=resource_data["id"],
-                    name=resource_data["name"],
-                    data=data_for_list_view(resource_data),
-                    _schema=resource_data.get("schema"),
-                    tags=resource_data.get("tags", []),
+                    id=effective["id"],
+                    name=effective["name"],
+                    data=data_for_list_view(effective),
+                    _schema=effective.get("schema"),
+                    tags=effective.get("tags", []),
                 )
                 data_resources.append(data_resource)
 
@@ -415,13 +438,64 @@ def data_resource(entity_path, data_id):
         if not resource_data:
             return jsonify({"error": "Data resource not found"}), 404
 
-        status, body = pick_data_resource_response(entity_path, resource_data)
+        effective = _with_data_override(entity_path, resource_data)
+        status, body = pick_data_resource_response(entity_path, effective)
         logger.info(
             f"Data resource requested: {entity_path}/{data_id} -> HTTP {status}"
         )
         return jsonify(body), status
     except Exception as e:
         logger.error(f"Error getting data resource {data_id} for {entity_path}: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/<path:entity_path>/data/<data_id>", methods=["PUT"])
+def update_data_resource(entity_path, data_id):
+    """Write data (ISO-style DataResourceWrite → DataResource). See sovd-api.yaml."""
+    try:
+        entity_path = _norm_entity_path(entity_path)
+        resource_data = config_loader.get_data_resource(entity_path, data_id)
+        if not resource_data:
+            return jsonify({"error": "Data resource not found"}), 404
+
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict) or "data" not in payload:
+            return (
+                jsonify(
+                    {
+                        "error": "Invalid body",
+                        "detail": "Request must be JSON with a required 'data' object (DataResourceWrite).",
+                    }
+                ),
+                400,
+            )
+        incoming = payload["data"]
+        if not isinstance(incoming, dict):
+            return (
+                jsonify(
+                    {"error": "Invalid body", "detail": "'data' must be a JSON object."}
+                ),
+                400,
+            )
+
+        base = dict(resource_data.get("data") or {})
+        cur = data_write_runtime.get_override(entity_path, data_id)
+        if cur is not None:
+            base = dict(cur)
+        merged = {**base, **incoming}
+        data_write_runtime.set_override(entity_path, data_id, merged)
+
+        effective = _with_data_override(entity_path, resource_data)
+        dr = DataResource(
+            id=effective["id"],
+            name=effective.get("name"),
+            data=effective.get("data"),
+            _schema=effective.get("schema"),
+            tags=effective.get("tags", []),
+        )
+        return jsonify(dr.to_dict()), 200
+    except Exception as e:
+        logger.error(f"Error updating data resource {data_id} for {entity_path}: {e}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -467,6 +541,76 @@ def operations(entity_path):
         return jsonify(collection.to_dict())
     except Exception as e:
         logger.error(f"Error getting operations for {entity_path}: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route(
+    "/<path:entity_path>/operations/<operation_id>/executions/<execution_id>",
+    methods=["GET", "DELETE"],
+)
+def operation_execution_detail(entity_path, operation_id, execution_id):
+    """ISO DIS 17978-3 style execution status (GET) and terminate (DELETE → 204)."""
+    try:
+        entity_path = _norm_entity_path(entity_path)
+        op = config_loader.get_operation(entity_path, operation_id)
+        if not op:
+            return jsonify({"error": "Operation not found"}), 404
+
+        if request.method == "DELETE":
+            if not execution_runtime.terminate(entity_path, operation_id, execution_id):
+                return jsonify({"error": "Execution not found"}), 404
+            return "", 204
+
+        rec = execution_runtime.get_record(entity_path, operation_id, execution_id)
+        if not rec:
+            return jsonify({"error": "Execution not found"}), 404
+        return jsonify(rec), 200
+    except Exception as e:
+        logger.error(
+            f"Error in operation execution {execution_id} for "
+            f"{entity_path}/{operation_id}: {e}"
+        )
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route(
+    "/<path:entity_path>/operations/<operation_id>/executions", methods=["GET", "POST"]
+)
+def operation_executions(entity_path, operation_id):
+    """List executions (GET) or start one (POST → 202 + Location)."""
+    try:
+        entity_path = _norm_entity_path(entity_path)
+        op = config_loader.get_operation(entity_path, operation_id)
+        if not op:
+            return jsonify({"error": "Operation not found"}), 404
+
+        if request.method == "GET":
+            ids = execution_runtime.list_ids(entity_path, operation_id)
+            return jsonify({"items": [{"id": i} for i in ids]}), 200
+
+        body = request.get_json(force=True, silent=True) or {}
+        if not isinstance(body, dict):
+            return jsonify({"error": "Request body must be a JSON object"}), 400
+        params = body.get("parameters")
+        if params is not None and not isinstance(params, dict):
+            return jsonify({"error": "'parameters' must be a JSON object"}), 400
+
+        exec_id = execution_runtime.create(entity_path, operation_id, params)
+        rec = execution_runtime.get_record(entity_path, operation_id, exec_id)
+        location = (
+            f"{_base_url()}{entity_path}/operations/{operation_id}/executions/{exec_id}"
+        )
+        rv = make_response(jsonify(rec), 202)
+        rv.headers["Location"] = location
+        logger.info(
+            f"Operation execution (ISO path) started: {entity_path}/"
+            f"operations/{operation_id}/executions/{exec_id}"
+        )
+        return rv
+    except Exception as e:
+        logger.error(
+            f"Error in operation executions for {entity_path}/{operation_id}: {e}"
+        )
         return jsonify({"error": str(e)}), 500
 
 
@@ -659,9 +803,20 @@ if __name__ == "__main__":
     print("  GET /{entity-path} - Get entity capabilities")
     print("  GET /{entity-path}/data - Get data resources")
     print("  GET /{entity-path}/data/{data_id} - Get specific data resource")
+    print(
+        "  PUT /{entity-path}/data/{data_id} - Write data resource (DataResourceWrite)"
+    )
     print("  GET /{entity-path}/operations - Get operations")
     print("  GET /{entity-path}/operations/{operation_id} - Get specific operation")
-    print("  POST /{entity-path}/operations/{operation_id} - Start operation execution")
+    print(
+        "  POST /{entity-path}/operations/{operation_id} - Start operation (legacy path)"
+    )
+    print(
+        "  GET|POST /{entity-path}/operations/{id}/executions - ISO execution list / start"
+    )
+    print(
+        "  GET|DELETE /{entity-path}/operations/{id}/executions/{eid} - Status / stop"
+    )
     print("  GET /{entity-path}/faults - Get faults")
     print("  GET /{entity-path}/faults/{fault_code} - Get fault by code")
     print("  GET /{entity-path}/modes - Get modes")
