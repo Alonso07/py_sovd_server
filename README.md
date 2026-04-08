@@ -84,11 +84,68 @@ poetry run flake8 src/ tests/
 
 ## Configuration
 
+### How the YAML files connect
+
+At runtime, **`config_loader`** reads **`sovd_gateway.yaml`** first. That file lists which **entity registry** YAML files to load (`areas`, `components`, `apps`). Each **entity** in those files (for example `/engine/ecu`) declares its REST **`endpoints`** and, under **`resources`**, a list of **per-type YAML files** (`data_resources`, `operations`, `faults`, `modes`, and so on). Those paths are resolved under `src/sovd_server/config/` and loaded when the server needs that entity or resource. **`enhanced_server`** uses the loader to satisfy each route (`GET /{entity}/data`, `.../faults`, etc.).
+
+```mermaid
+flowchart TB
+  subgraph runtime["Runtime"]
+    App["enhanced_server.py\n(Flask routes)"]
+    Loader["config_loader.py"]
+    App --> Loader
+  end
+
+  subgraph gateway["1 · Gateway"]
+    GW["sovd_gateway.yaml\nnetwork · logging · lists of entity files"]
+  end
+
+  subgraph entities_layer["2 · Entity registries"]
+    AREAS["entities/areas.yaml\nvehicle areas, e.g. /engine"]
+    COMPS["entities/components.yaml\nECUs, sensors, ..."]
+    APPS["entities/apps.yaml\napplications"]
+  end
+
+  subgraph entity_record["Per-entity record (conceptual)"]
+    ID["id · name · tags"]
+    EP["endpoints\n→ capabilities, /data, /operations, …"]
+    RES["resources\n→ lists of YAML paths by type"]
+    ID --- EP --- RES
+  end
+
+  subgraph resources_layer["3 · Resource YAML trees"]
+    DATA["resources/data/*.yaml"]
+    OPS["resources/operations/*.yaml"]
+    FLT["resources/faults/*.yaml"]
+    MOD["resources/modes/*.yaml"]
+    CFG["resources/configurations/*.yaml"]
+    UPD["resources/updates/*.yaml"]
+  end
+
+  Loader --> GW
+  GW --> AREAS
+  GW --> COMPS
+  GW --> APPS
+
+  AREAS --> entity_record
+  COMPS --> entity_record
+  APPS --> entity_record
+
+  RES --> DATA
+  RES --> OPS
+  RES --> FLT
+  RES --> MOD
+  RES --> CFG
+  RES --> UPD
+```
+
+The gateway file also documents default **`resources.*.config_dir`** folders; the **actual binding** from an entity to a file is always the path string in that entity’s `resources` block (for example `config/resources/data/ecu_data_resources.yaml`).
+
+For round-robin **`responses`**, software **updates**, and examples, see [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
+
 - **Gateway:** `src/sovd_server/config/sovd_gateway.yaml` — host, port, logging, entity index paths
 - **Entities:** `src/sovd_server/config/entities/` — areas, components, applications
-- **Resources:** `src/sovd_server/config/resources/` — data, operations, faults, modes, updates, etc.
-
-See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for round-robin `responses`, updates, and examples.
+- **Resources:** `src/sovd_server/config/resources/` — data, operations, faults, modes, configurations, updates
 
 ## API overview
 
