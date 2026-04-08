@@ -19,6 +19,11 @@ sys.path.insert(0, current_dir)
 
 try:
     from .config_loader import config_loader
+    from .fault_builder import (
+        build_fault_reference,
+        filter_faults_for_query,
+        parse_query_mask,
+    )
     from .resource_response import (
         data_for_list_view,
         pick_data_resource_response,
@@ -29,6 +34,11 @@ try:
     from . import update_runtime
 except ImportError:
     from config_loader import config_loader
+    from fault_builder import (
+        build_fault_reference,
+        filter_faults_for_query,
+        parse_query_mask,
+    )
     from resource_response import (
         data_for_list_view,
         pick_data_resource_response,
@@ -48,10 +58,7 @@ from sovd_server.models.data_resource import DataResource
 from sovd_server.models.data_resource_collection import DataResourceCollection
 from sovd_server.models.operation import Operation
 from sovd_server.models.operation_collection import OperationCollection
-from sovd_server.models.fault import Fault
 from sovd_server.models.fault_collection import FaultCollection
-from sovd_server.models.fault_reference import FaultReference
-from sovd_server.models.fault_status import FaultStatus
 from sovd_server.models.mode import Mode
 from sovd_server.models.mode_collection import ModeCollection
 from sovd_server.models.version_info import VersionInfo
@@ -540,7 +547,7 @@ def fault_by_code(entity_path, fault_code):
 
 @app.route("/<path:entity_path>/faults", methods=["GET"])
 def faults(entity_path):
-    """Get faults for an entity"""
+    """Get faults for an entity (optional query: severity, scope, status, mask)."""
     try:
         # Ensure entity_path starts with /
         if not entity_path.startswith("/"):
@@ -551,30 +558,24 @@ def faults(entity_path):
         if not faults_data:
             return jsonify({"error": "Entity not found"}), 404
 
-        faults = []
-        for fault_data in faults_data:
-            # Create FaultStatus object with default values
-            fault_status = FaultStatus(
-                test_failed="false",
-                confirmed_dtc="false",
-                aggregated_status=fault_data.get("status", "inactive"),
-            )
+        severity = request.args.get("severity", type=int)
+        scope = request.args.get("scope") or None
+        if scope is not None and scope.strip() == "":
+            scope = None
+        status_q = request.args.get("status") or None
+        if status_q is not None and status_q.strip() == "":
+            status_q = None
+        mask = parse_query_mask(request.args.get("mask"))
 
-            # Create FaultReference object
-            fault_ref = FaultReference(
-                code=fault_data["id"],
-                scope=fault_data.get("scope", "system"),
-                display_code=fault_data["id"],
-                fault_name=fault_data["name"],
-                severity=fault_data.get("severity", "warning"),
-                status=fault_status,
-            )
-
-            # Create Fault object with the reference
-            fault = Fault(item=fault_ref)
-            faults.append(fault)
-
-        collection = FaultCollection(items=faults)
+        filtered = filter_faults_for_query(
+            faults_data,
+            severity=severity,
+            scope=scope,
+            status=status_q,
+            mask=mask,
+        )
+        items = [build_fault_reference(fd) for fd in filtered]
+        collection = FaultCollection(items=items)
 
         logger.info(f"Faults requested for entity: {entity_path}")
         return jsonify(collection.to_dict())

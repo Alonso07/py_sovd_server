@@ -103,7 +103,7 @@ See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for round-robin `responses`, 
 | `GET /{entity}/operations` | Operations collection |
 | `GET /{entity}/operations/{id}` | Operation metadata |
 | `POST /{entity}/operations/{id}` | Execute operation (optional `responses` round-robin) |
-| `GET /{entity}/faults` | Fault collection |
+| `GET /{entity}/faults` | Fault collection (optional query: `severity`, `scope`, `status`, `mask`) |
 | `GET /{entity}/faults/{fault_code}` | Single fault (optional `responses` round-robin) |
 | `GET /{entity}/modes` | Mode collection |
 | `GET /{entity}/modes/{mode_id}` | Single mode (optional `responses` round-robin) |

@@ -157,6 +157,7 @@ def test_legacy_fault_variants_single_200():
     assert len(v) == 1
     assert v[0][0] == 200
     assert v[0][1]["item"]["code"] == "ECU-001"
+    assert v[0][1]["item"]["severity"] == 1
 
 
 def test_legacy_mode_variants_single_200():

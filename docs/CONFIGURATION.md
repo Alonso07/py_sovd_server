@@ -55,7 +55,12 @@ YAML files defining data resources with schemas and actual values (e.g., Softwar
 Operation definitions with request/response payloads, execution type, and timeout (e.g., calibratecamera).
 
 #### Faults
-Fault definitions with severity and diagnostic information.
+Fault definitions with severity, scope, status (aggregated: `active` / `inactive` / `pending`), and optional fields used for ISO-style responses and filtering:
+
+- **`mask`**, **`status_mask`**, or **`dtc_mask`**: DTC/status byte mask (hex string such as `FF` or `04`, or integer). Returned as `FaultStatus.mask` (two-digit uppercase hex). When clients call `GET /{entity}/faults?mask=…`, only faults whose mask shares a non-zero bit with the query mask are listed; faults with no mask still appear (query mask does not exclude them).
+- **`status_bits`**: Optional map of UDS-style flags (`test_failed`, `pending_dtc`, `confirmed_dtc`, …) with values `"0"` / `"1"` or booleans; defaults to `"0"` where omitted.
+
+`GET /{entity}/faults` supports query parameters **`severity`** (integer 1–3; YAML words `warning`→1, `error`→2, `critical`→3), **`scope`** (exact string match), **`status`** (aggregated status), and optional **`mask`** (bitmask, e.g. `0x04` or `4`).
 
 #### Modes
 Operation modes with capabilities and limitations.

@@ -8,6 +8,7 @@ faults:
     severity: "critical"
     scope: "system"
     status: "active"
+    mask: "FF"
     tags: ["communication", "ecu", "critical", "system"]
     
   - id: "ECU-002"
@@ -16,6 +17,7 @@ faults:
     severity: "critical"
     scope: "ecu"
     status: "inactive"
+    mask: "01"
     tags: ["memory", "ecu", "critical", "hardware"]
     
   - id: "ECU-003"
@@ -24,6 +26,7 @@ faults:
     severity: "warning"
     scope: "ecu"
     status: "active"
+    mask: "04"
     tags: ["temperature", "ecu", "warning", "thermal"]
     
   - id: "ECU-004"
@@ -70,7 +73,7 @@ faults:
     name: "Round-robin demo fault"
     description: "Cycles HTTP status/body on each GET .../faults/ECU-RR"
     severity: "warning"
-    scope: "system"
+    scope: "demo"
     status: "inactive"
     tags: ["demo", "round-robin"]
     responses:

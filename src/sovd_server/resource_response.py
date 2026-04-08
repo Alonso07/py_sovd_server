@@ -124,23 +124,14 @@ def pick_operation_response(
 
 
 def _legacy_fault_tuple(fault_data: Dict[str, Any]) -> Tuple[int, Dict[str, Any]]:
-    from sovd_server.models.fault import Fault
-    from sovd_server.models.fault_reference import FaultReference
-    from sovd_server.models.fault_status import FaultStatus
+    try:
+        from .fault_builder import build_fault_reference
+    except ImportError:
+        from fault_builder import build_fault_reference
 
-    fault_status = FaultStatus(
-        test_failed="false",
-        confirmed_dtc="false",
-        aggregated_status=fault_data.get("status", "inactive"),
-    )
-    fault_ref = FaultReference(
-        code=fault_data["id"],
-        scope=fault_data.get("scope", "system"),
-        display_code=fault_data["id"],
-        fault_name=fault_data["name"],
-        severity=fault_data.get("severity", "warning"),
-        status=fault_status,
-    )
+    from sovd_server.models.fault import Fault
+
+    fault_ref = build_fault_reference(fault_data)
     fault = Fault(item=fault_ref)
     return (200, fault.to_dict())
 

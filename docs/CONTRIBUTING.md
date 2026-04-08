@@ -62,9 +62,11 @@ poetry run flake8 src/ tests/
 poetry run black --check --diff \
   src/sovd_server/config_loader.py \
   src/sovd_server/enhanced_server.py \
+  src/sovd_server/fault_builder.py \
   src/sovd_server/run_enhanced_server.py \
   src/sovd_server/__init__.py \
   src/sovd_server/parse_pdf.py \
+  src/sovd_server/resource_response.py \
   tests/
 # or: make format-check   (formats all of src/ + tests/ — broader than CI)
 ```

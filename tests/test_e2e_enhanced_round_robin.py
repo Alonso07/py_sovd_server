@@ -103,3 +103,36 @@ def test_e2e_legacy_fault_shape(client):
     assert r.status_code == 200
     body = r.get_json()
     assert body["item"]["code"] == "ECU-001"
+    assert body["item"]["severity"] == 3
+    assert body["item"]["status"]["mask"] == "FF"
+
+
+def test_e2e_fault_collection_is_fault_references(client):
+    """GET /faults returns FaultCollection with ``items`` as references (not nested Fault)."""
+    r = client.get(f"{ECU}/faults")
+    assert r.status_code == 200
+    data = r.get_json()
+    assert "items" in data
+    assert data["items"]
+    first = data["items"][0]
+    assert "item" not in first
+    assert first["code"] == "ECU-001"
+    assert first["severity"] == 3
+    assert first["status"]["aggregated_status"] == "active"
+    assert first["status"]["mask"] == "FF"
+
+
+def test_e2e_faults_filter_scope_and_mask(client):
+    r = client.get(f"{ECU}/faults?scope=system")
+    assert r.status_code == 200
+    items = r.get_json()["items"]
+    codes = [x["code"] for x in items]
+    assert all(x["scope"] == "system" for x in items)
+    assert "ECU-001" in codes
+    assert "ECU-002" not in codes
+
+    r2 = client.get(f"{ECU}/faults?mask=4")
+    codes2 = {x["code"] for x in r2.get_json()["items"]}
+    assert "ECU-001" in codes2
+    assert "ECU-003" in codes2
+    assert "ECU-002" not in codes2
