@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sovd-server"
-version = "1.2.0"
+version = "1.2.1"
 description = "SOVD (Service-Oriented Vehicle Data) Server Implementation"
 readme = "README.md"
 license = "MIT"

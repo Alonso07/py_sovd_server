@@ -5,7 +5,7 @@ A Flask-based server implementation for the SOVD standard,
 providing vehicle data access through RESTful APIs.
 """
 
-__version__ = "1.2.0"
+__version__ = "1.2.1"
 __author__ = "SOVD Development Team"
 __email__ = "dev@sovd.org"
 
